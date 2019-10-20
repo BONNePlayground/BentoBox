@@ -68,7 +68,7 @@
         <powermock.version>2.0.2</powermock.version>
         <mongodb.version>3.8.0</mongodb.version>
         <!-- More visible way how to change dependency versions -->
-        <spigot.version>1.14.4-R0.1-SNAPSHOT</spigot.version>
+        <spigot.version>1.13.2-R0.1-SNAPSHOT</spigot.version>
         <bstats.version>1.5</bstats.version>
         <vault.version>1.7</vault.version>
         <placeholderapi.version>2.10.3</placeholderapi.version>
@@ -79,7 +79,7 @@
         <!-- Revision variable removes warning about dynamic version -->
         <revision>${build.version}-SNAPSHOT</revision>
         <!-- Do not change unless you want different name for local builds. -->
-        <build.number>-LOCAL</build.number>
+        <build.number>-1.13.2-LOCAL</build.number>
         <!-- This allows to change between versions. -->
         <build.version>1.8.0</build.version>
     </properties>

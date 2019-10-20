@@ -267,7 +267,7 @@ public class StandardSpawnProtectionListenerTest {
      */
     @Test
     public void testOnBucketEmptyDisallowed() {
-        PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, block, BlockFace.DOWN, null, null);
+        PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, BlockFace.DOWN, null, null);
         ssp.onBucketEmpty(e);
         assertTrue(e.isCancelled());
         verify(player).sendMessage("protection.spawn-protected");
@@ -279,7 +279,7 @@ public class StandardSpawnProtectionListenerTest {
     @Test
     public void testOnBucketEmptyAllowed() {
         when(player.isOp()).thenReturn(true);
-        PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, block, BlockFace.DOWN, null, null);
+        PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, BlockFace.DOWN, null, null);
         ssp.onBucketEmpty(e);
         assertFalse(e.isCancelled());
         verify(player, never()).sendMessage("protection.spawn-protected");

@@ -173,7 +173,7 @@ public class BlockInteractionListener extends FlagListener {
         case CAULDRON:
             checkIsland(e, player, loc, Flags.BREWING);
             break;
-        case BARREL:
+//        case BARREL:
         case CHEST:
         case CHEST_MINECART:
         case TRAPPED_CHEST:
@@ -195,7 +195,7 @@ public class BlockInteractionListener extends FlagListener {
         case YELLOW_SHULKER_BOX:
         case SHULKER_BOX:
         case FLOWER_POT:
-        case COMPOSTER:
+//        case COMPOSTER:
             checkIsland(e, player, loc, Flags.CONTAINER);
             break;
         case DISPENSER:
@@ -234,11 +234,11 @@ public class BlockInteractionListener extends FlagListener {
         case SPRUCE_FENCE_GATE:
             checkIsland(e, player, loc, Flags.GATE);
             break;
-        case BLAST_FURNACE:
-        case CAMPFIRE:
+//        case BLAST_FURNACE:
+//        case CAMPFIRE:
         case FURNACE_MINECART:
         case FURNACE:
-        case SMOKER:
+//        case SMOKER:
             checkIsland(e, player, loc, Flags.FURNACE);
             break;
         case ENCHANTING_TABLE:
@@ -254,10 +254,10 @@ public class BlockInteractionListener extends FlagListener {
             checkIsland(e, player, loc, Flags.NOTE_BLOCK);
             break;
         case CRAFTING_TABLE:
-        case CARTOGRAPHY_TABLE:
-        case GRINDSTONE:
-        case STONECUTTER:
-        case LOOM:
+//        case CARTOGRAPHY_TABLE:
+//        case GRINDSTONE:
+//        case STONECUTTER:
+//        case LOOM:
             checkIsland(e, player, loc, Flags.CRAFTING);
             break;
         case STONE_BUTTON:
@@ -286,10 +286,10 @@ public class BlockInteractionListener extends FlagListener {
         case ITEM_FRAME:
             checkIsland(e, player, loc, Flags.ITEM_FRAME);
             break;
-        case LECTERN:
-        case SWEET_BERRY_BUSH:
-            checkIsland(e, player, loc, Flags.BREAK_BLOCKS);
-            break;
+//        case LECTERN:
+//        case SWEET_BERRY_BUSH:
+//            checkIsland(e, player, loc, Flags.BREAK_BLOCKS);
+//            break;
         case CAKE:
             checkIsland(e, player, loc, Flags.CAKE);
             break;

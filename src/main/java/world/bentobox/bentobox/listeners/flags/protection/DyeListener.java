@@ -28,10 +28,10 @@ public class DyeListener extends FlagListener {
 			return;
 		}
 
-		if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && e.getClickedBlock().getType().name().contains("SIGN")
-			&& e.getItem().getType().name().contains("DYE")) {
-			checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.DYE);
-		}
+//		if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && e.getClickedBlock().getType().name().contains("SIGN")
+//			&& e.getItem().getType().name().contains("DYE")) {
+//			checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.DYE);
+//		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

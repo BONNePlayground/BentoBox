@@ -156,10 +156,10 @@ public class PanelListenerManagerTest {
             return InventoryType.PLAYER;
         }
 
-        @Override
-        public String getTitle() {
-            return name;
-        }
+//        @Override
+//        public String getTitle() {
+//            return name;
+//        }
 
     }
 

@@ -95,7 +95,7 @@ public class ServerCompatibility {
     public enum ServerVersion {
         V1_13(Compatibility.INCOMPATIBLE),
         V1_13_1(Compatibility.INCOMPATIBLE),
-        V1_13_2(Compatibility.NOT_SUPPORTED),
+        V1_13_2(Compatibility.COMPATIBLE),
         /**
          * @since 1.5.0
          */
@@ -115,7 +115,7 @@ public class ServerCompatibility {
         /**
          * @since 1.6.0
          */
-        V1_14_4(Compatibility.COMPATIBLE);
+        V1_14_4(Compatibility.NOT_SUPPORTED);
 
         private Compatibility compatibility;
 
