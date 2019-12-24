@@ -20,6 +20,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -139,6 +140,12 @@ public class PortalTeleportationListenerTest {
 
     }
 
+    @After
+    public void tearDown() {
+        User.clearUsers();
+        Mockito.framework().clearInlineMocks();
+    }
+
     private void wrongWorld() {
         when(iwm.inWorld(any(World.class))).thenReturn(false);
         when(iwm.inWorld(any(Location.class))).thenReturn(false);
@@ -174,7 +181,7 @@ public class PortalTeleportationListenerTest {
         PortalTeleportationListener np = new PortalTeleportationListener(plugin);
         PlayerPortalEvent e = new PlayerPortalEvent(null, from, null, null, TeleportCause.END_PORTAL);
         np.onEndIslandPortal(e);
-        assertFalse(e.isCancelled());
+        assertTrue(e.isCancelled());
     }
 
     /**

@@ -17,6 +17,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.eclipse.jdt.annotation.Nullable;
 
+import io.papermc.lib.PaperLib;
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.database.objects.Island;
@@ -83,32 +84,35 @@ public class SafeSpotTeleport {
         notChecking = true;
 
         // Start a recurring task until done or cancelled
-        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (notChecking) {
-                notChecking = false;
-                List<ChunkSnapshot> chunkSnapshot = new ArrayList<>();
-                Iterator<Pair<Integer, Integer>> it = chunksToScan.iterator();
-                if (!it.hasNext()) {
-                    // Nothing left
-                    tidyUp(entity, failureMessage);
-                    return;
+        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> gatherChunks(failureMessage), 0L, SPEED);
+    }
+
+    private void gatherChunks(String failureMessage) {
+        if (!notChecking) {
+            return;
+        }
+        notChecking = false;
+        List<ChunkSnapshot> chunkSnapshot = new ArrayList<>();
+        Iterator<Pair<Integer, Integer>> it = chunksToScan.iterator();
+        if (!it.hasNext()) {
+            // Nothing left
+            tidyUp(entity, failureMessage);
+            return;
+        }
+        // Add chunk snapshots to the list
+        while (it.hasNext() && chunkSnapshot.size() < MAX_CHUNKS) {
+            Pair<Integer, Integer> pair = it.next();
+            if (location.getWorld() != null) {
+                boolean isLoaded = location.getWorld().getChunkAt(pair.x, pair.z).isLoaded();
+                chunkSnapshot.add(location.getWorld().getChunkAt(pair.x, pair.z).getChunkSnapshot());
+                if (!isLoaded) {
+                    location.getWorld().getChunkAt(pair.x, pair.z).unload();
                 }
-                // Add chunk snapshots to the list
-                while (it.hasNext() && chunkSnapshot.size() < MAX_CHUNKS) {
-                    Pair<Integer, Integer> pair = it.next();
-                    if (location.getWorld() != null) {
-                        boolean isLoaded = location.getWorld().getChunkAt(pair.x, pair.z).isLoaded();
-                        chunkSnapshot.add(location.getWorld().getChunkAt(pair.x, pair.z).getChunkSnapshot());
-                        if (!isLoaded) {
-                            location.getWorld().getChunkAt(pair.x, pair.z).unload();
-                        }
-                    }
-                    it.remove();
-                }
-                // Move to next step
-                checkChunks(chunkSnapshot);
             }
-        }, 0L, SPEED);
+            it.remove();
+        }
+        // Move to next step
+        checkChunks(chunkSnapshot);
     }
 
     private void tidyUp(Entity entity, String failureMessage) {
@@ -223,16 +227,13 @@ public class SafeSpotTeleport {
      */
     private void teleportEntity(final Location loc) {
         task.cancel();
+        if (!portal && entity instanceof Player && homeNumber > 0) {
+            // Set home if so marked
+            plugin.getPlayers().setHomeLocation(User.getInstance(entity), loc, homeNumber);
+        }
+        Vector velocity = entity.getVelocity();
         // Return to main thread and teleport the player
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (!portal && entity instanceof Player && homeNumber > 0) {
-                // Set home if so marked
-                plugin.getPlayers().setHomeLocation(User.getInstance(entity), loc, homeNumber);
-            }
-            Vector velocity = entity.getVelocity();
-            entity.teleport(loc);
-            entity.setVelocity(velocity);
-        });
+        Bukkit.getScheduler().runTask(plugin, () -> PaperLib.teleportAsync(entity, loc).thenAccept(b -> entity.setVelocity(velocity)));
     }
 
     /**

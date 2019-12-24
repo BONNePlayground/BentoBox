@@ -1,6 +1,7 @@
 package world.bentobox.bentobox.listeners;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.database.objects.Island;
 import world.bentobox.bentobox.database.objects.Players;
 import world.bentobox.bentobox.lists.Flags;
+import world.bentobox.bentobox.managers.BlueprintsManager;
 import world.bentobox.bentobox.managers.PlayersManager;
 import world.bentobox.bentobox.managers.RanksManager;
 import world.bentobox.bentobox.util.Util;
@@ -42,42 +44,74 @@ public class JoinLeaveListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerJoin(final PlayerJoinEvent event) {
         User user = User.getInstance(event.getPlayer());
-        if (user.getUniqueId() == null) {
+        if (user == null || user.getUniqueId() == null) {
             return;
         }
         UUID playerUUID = user.getUniqueId();
-        // Load player
+
+        // Make sure the player is loaded into the cache or create the player if they don't exist
         players.addPlayer(playerUUID);
-        if (plugin.getPlayers().isKnown(playerUUID)) {
-            // Reset island resets if required
+
+        // Check if player hasn't joined before
+        if (!players.isKnown(playerUUID)) {
             plugin.getIWM().getOverWorlds().stream()
-            .filter(w -> event.getPlayer().getLastPlayed() < plugin.getIWM().getResetEpoch(w))
-            .forEach(w -> players.setResets(w, playerUUID, 0));
+            .filter(w -> plugin.getIWM().isCreateIslandOnFirstLoginEnabled(w))
+            .forEach(w -> {
+                // Even if that'd be extremely unlikely, it's better to check if the player doesn't have an island already.
+                if (!(plugin.getIslands().hasIsland(w, user) || plugin.getIslands().inTeam(w, user.getUniqueId()))) {
+                    int delay = plugin.getIWM().getCreateIslandOnFirstLoginDelay(w);
+                    user.sendMessage("commands.island.create.on-first-login",
+                            TextVariables.NUMBER, String.valueOf(delay));
 
-            // Automated island ownership transfer
-            if (plugin.getSettings().isEnableAutoOwnershipTransfer()) {
-                runAutomatedOwnershipTransfer(user);
-            }
+                    Runnable createIsland = () -> {
+                        // should only execute if:
+                        // - abort on logout is false
+                        // - abort on logout is true && user is online
+                        if (!plugin.getIWM().isCreateIslandOnFirstLoginAbortOnLogout(w) || user.isOnline()){
+                            plugin.getIWM().getAddon(w).ifPresent(addon -> addon.getPlayerCommand()
+                                    .map(command -> command.getSubCommand("create").orElse(null))
+                                    .ifPresent(command -> command.execute(user, "create", Collections.singletonList(BlueprintsManager.DEFAULT_BUNDLE_NAME))));
+                        }
+                    };
 
-            // Update the island range of the islands the player owns
-            updateIslandRange(user);
-
-            // Set the player's name (it may have changed), but only if it isn't empty
-            if (!user.getName().isEmpty()) {
-                players.setPlayerName(user);
-                players.save(playerUUID);
-            } else {
-                plugin.logWarning("Player that just logged in has no name! " + playerUUID.toString());
-            }
-
-            // If mobs have to be removed when a player joins, then wipe all the mobs on his island.
-            if (plugin.getIslands().locationIsOnIsland(event.getPlayer(), user.getLocation()) && Flags.REMOVE_MOBS.isSetForWorld(user.getWorld())) {
-                Bukkit.getScheduler().runTask(plugin, () -> plugin.getIslands().clearArea(user.getLocation()));
-            }
-
-            // Clear inventory if required
-            clearPlayersInventory(Util.getWorld(event.getPlayer().getWorld()), User.getInstance(event.getPlayer()));
+                    if (delay <= 0) {
+                        createIsland.run();
+                    } else {
+                        Bukkit.getScheduler().runTaskLater(plugin, createIsland, delay * 20L);
+                    }
+                }
+            });
         }
+
+
+        // Reset island resets if required
+        plugin.getIWM().getOverWorlds().stream()
+        .filter(w -> event.getPlayer().getLastPlayed() < plugin.getIWM().getResetEpoch(w))
+        .forEach(w -> players.setResets(w, playerUUID, 0));
+
+        // Automated island ownership transfer
+        if (plugin.getSettings().isEnableAutoOwnershipTransfer()) {
+            runAutomatedOwnershipTransfer(user);
+        }
+
+        // Update the island range of the islands the player owns
+        updateIslandRange(user);
+
+        // Set the player's name (it may have changed), but only if it isn't empty
+        if (!user.getName().isEmpty()) {
+            players.setPlayerName(user);
+            players.save(playerUUID);
+        } else {
+            plugin.logWarning("Player that just logged in has no name! " + playerUUID.toString());
+        }
+
+        // If mobs have to be removed when a player joins, then wipe all the mobs on his island.
+        if (plugin.getIslands().locationIsOnIsland(event.getPlayer(), user.getLocation()) && Flags.REMOVE_MOBS.isSetForWorld(user.getWorld())) {
+            Bukkit.getScheduler().runTask(plugin, () -> plugin.getIslands().clearArea(user.getLocation()));
+        }
+
+        // Clear inventory if required
+        clearPlayersInventory(Util.getWorld(event.getPlayer().getWorld()), user);
     }
 
 
@@ -102,7 +136,7 @@ public class JoinLeaveListener implements Listener {
         // Clear inventory if required
         Players playerData = players.getPlayer(user.getUniqueId());
 
-        if (!playerData.getPendingKicks().isEmpty() && playerData.getPendingKicks().contains(world.getName())) {
+        if (playerData.getPendingKicks().contains(world.getName())) {
             if (plugin.getIWM().isOnLeaveResetEnderChest(world)) {
                 user.getPlayer().getEnderChest().clear();
             }
@@ -156,7 +190,8 @@ public class JoinLeaveListener implements Listener {
             if (island != null) {
                 // Check if new owner has a different range permission than the island size
                 int range = user.getPermissionValue(plugin.getIWM().getAddon(island.getWorld()).map(GameModeAddon::getPermissionPrefix).orElse("") + "island.range", island.getProtectionRange());
-
+                // Range cannot be greater than the island distance
+                range = Math.min(range, plugin.getIWM().getIslandDistance(island.getWorld()));
                 // Range can go up or down
                 if (range != island.getProtectionRange()) {
                     user.sendMessage("commands.admin.setrange.range-updated", TextVariables.NUMBER, String.valueOf(range));
@@ -174,7 +209,7 @@ public class JoinLeaveListener implements Listener {
         plugin.getIWM().getOverWorlds().forEach(w -> {
             Island island = plugin.getIslands().getIsland(w, User.getInstance(event.getPlayer()));
             // Are there any online players still for this island?
-            if (island != null && Bukkit.getServer().getOnlinePlayers().stream()
+            if (island != null && Bukkit.getOnlinePlayers().stream()
                     .filter(p -> !event.getPlayer().equals(p))
                     .noneMatch(p -> plugin.getIslands().getMembers(w, event.getPlayer().getUniqueId()).contains(p.getUniqueId()))) {
                 // No, there are no more players online on this island

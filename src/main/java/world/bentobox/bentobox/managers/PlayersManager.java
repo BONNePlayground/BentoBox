@@ -154,8 +154,8 @@ public class PlayersManager {
     }
 
     /**
-     * Checks if the player is known or not. Will check not just the cache but if the object is
-     * in the database too.
+     * Checks if the player is known or not.
+     * Will check not just the cache but if the object but in the database too.
      *
      * @param uniqueID - unique ID
      * @return true if player is known, otherwise false
@@ -433,7 +433,7 @@ public class PlayersManager {
     /**
      * Tries to get the user from his name
      * @param name - name
-     * @return user - user
+     * @return user - user or null if unknown
      */
     public User getUser(String name) {
         return getUser(getUUID(name));

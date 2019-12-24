@@ -3,9 +3,11 @@ package world.bentobox.bentobox.api.commands.island;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,10 +21,12 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -32,6 +36,7 @@ import org.powermock.reflect.Whitebox;
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.Settings;
 import world.bentobox.bentobox.api.commands.CompositeCommand;
+import world.bentobox.bentobox.api.localization.TextVariables;
 import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.database.objects.Island;
 import world.bentobox.bentobox.managers.CommandsManager;
@@ -85,6 +90,7 @@ public class IslandBanlistCommandTest {
         when(user.getUniqueId()).thenReturn(uuid);
         when(user.getPlayer()).thenReturn(p);
         when(user.getName()).thenReturn("tastybento");
+        when(user.getPermissionValue(anyString(), anyInt())).thenReturn(-1); // Unlimited bans
 
         // Parent command has no aliases
         when(ic.getSubCommandAliases()).thenReturn(new HashMap<>());
@@ -114,6 +120,11 @@ public class IslandBanlistCommandTest {
         when(iwm.getFriendlyName(any())).thenReturn("BSkyBlock");
         when(plugin.getIWM()).thenReturn(iwm);
 
+    }
+
+    @After
+    public void tearDown() {
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -187,4 +198,22 @@ public class IslandBanlistCommandTest {
         verify(user).sendMessage("commands.island.banlist.the-following");
     }
 
+    /**
+     * Test method for {@link IslandBanlistCommand#execute(User, String, java.util.List)}.
+     */
+    @Test
+    public void testBanlistMaxBanNoLimit() {
+        testBanlistBanned();
+        verify(user, never()).sendMessage(eq("commands.island.banlist.you-can-ban"), anyString(), anyString());
+    }
+
+    /**
+     * Test method for {@link IslandBanlistCommand#execute(User, String, java.util.List)}.
+     */
+    @Test
+    public void testBanlistMaxBanLimit() {
+        when(user.getPermissionValue(anyString(), anyInt())).thenReturn(15);
+        testBanlistBanned();
+        verify(user).sendMessage(eq("commands.island.banlist.you-can-ban"), eq(TextVariables.NUMBER), eq("4"));
+    }
 }

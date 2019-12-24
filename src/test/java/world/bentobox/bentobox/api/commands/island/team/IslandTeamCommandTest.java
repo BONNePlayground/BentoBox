@@ -28,6 +28,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import com.google.common.collect.ImmutableSet;
+
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.commands.island.team.Invite.Type;
@@ -103,6 +105,12 @@ public class IslandTeamCommandTest {
         when(im.getOwner(any(), any())).thenReturn(uuid);
         // No team members
         when(im.getMembers(any(), any(UUID.class))).thenReturn(Collections.emptySet());
+        // Add members
+        ImmutableSet<UUID> set = new ImmutableSet.Builder<UUID>().build();
+        // No members
+        when(island.getMemberSet(anyInt(), any(Boolean.class))).thenReturn(set);
+        when(island.getMemberSet(anyInt())).thenReturn(set);
+        when(island.getMemberSet()).thenReturn(set);
         // island
         when(im.getIsland(any(), eq(uuid))).thenReturn(island);
 
@@ -161,7 +169,6 @@ public class IslandTeamCommandTest {
     public void testExecuteUserStringListOfStringIslandIsNotFull() {
         assertTrue(tc.execute(user, "team", Collections.emptyList()));
         verify(user).sendMessage(eq("commands.island.team.invite.you-can-invite"), eq(TextVariables.NUMBER), eq("3"));
-        verify(island).showMembers(eq(user));
     }
 
     /**
@@ -172,7 +179,6 @@ public class IslandTeamCommandTest {
         when(user.getPermissionValue(eq("bskyblock.team.maxsize"), anyInt())).thenReturn(0);
         assertTrue(tc.execute(user, "team", Collections.emptyList()));
         verify(user).sendMessage(eq("commands.island.team.invite.errors.island-is-full"));
-        verify(island).showMembers(eq(user));
     }
 
     /**
@@ -233,5 +239,4 @@ public class IslandTeamCommandTest {
         tc.removeInvite(invitee);
         assertNull(tc.getInvite(invitee));
     }
-
 }

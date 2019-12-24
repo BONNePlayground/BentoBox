@@ -1,11 +1,9 @@
-/**
- *
- */
 package world.bentobox.bentobox.listeners.flags.protection;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -25,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Enderman;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -38,6 +37,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.PluginManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -134,6 +134,7 @@ public class HurtingListenerTest {
         // Monsters and animals
         when(enderman.getLocation()).thenReturn(location);
         when(enderman.getWorld()).thenReturn(world);
+        when(enderman.getType()).thenReturn(EntityType.ENDERMAN);
         Slime slime = mock(Slime.class);
         when(slime.getLocation()).thenReturn(location);
 
@@ -176,6 +177,9 @@ public class HurtingListenerTest {
         // Utils
         when(Util.isPassiveEntity(any())).thenCallRealMethod();
         when(Util.isHostileEntity(any())).thenCallRealMethod();
+        // Util strip spaces
+        when(Util.stripSpaceAfterColorCodes(anyString())).thenCallRealMethod();
+
 
         // User & player
         when(player.getLocation()).thenReturn(location);
@@ -185,6 +189,7 @@ public class HurtingListenerTest {
     @After
     public void tearDown() {
         User.clearUsers();
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -326,6 +331,7 @@ public class HurtingListenerTest {
     public void testOnFishingDisallowVillagerCatching() {
         Villager entity = mock(Villager.class);
         when(entity.getLocation()).thenReturn(location);
+        when(entity.getType()).thenReturn(EntityType.VILLAGER);
         State state = State.CAUGHT_ENTITY;
         PlayerFishEvent e = new PlayerFishEvent(player, entity, hookEntity, state);
         HurtingListener hl = new HurtingListener();
@@ -338,9 +344,27 @@ public class HurtingListenerTest {
      * Test method for {@link HurtingListener#onFishing(org.bukkit.event.player.PlayerFishEvent)}.
      */
     @Test
+    public void testOnFishingDisallowWanderingTraderCatching() {
+        Villager entity = mock(Villager.class);
+        when(entity.getType()).thenReturn(EntityType.VILLAGER);
+        when(entity.getLocation()).thenReturn(location);
+        State state = State.CAUGHT_ENTITY;
+        PlayerFishEvent e = new PlayerFishEvent(player, entity, hookEntity, state);
+        HurtingListener hl = new HurtingListener();
+        hl.onFishing(e);
+        // Verify
+        verify(notifier).notify(eq(user), eq("protection.protected"));
+    }
+
+
+    /**
+     * Test method for {@link HurtingListener#onFishing(org.bukkit.event.player.PlayerFishEvent)}.
+     */
+    @Test
     public void testOnFishingAllowVillagerCatching() {
         Villager entity = mock(Villager.class);
         when(entity.getLocation()).thenReturn(location);
+        when(entity.getType()).thenReturn(EntityType.VILLAGER);
         State state = State.CAUGHT_ENTITY;
         PlayerFishEvent e = new PlayerFishEvent(player, entity, hookEntity, state);
         HurtingListener hl = new HurtingListener();
@@ -350,9 +374,29 @@ public class HurtingListenerTest {
         // Verify
         verify(notifier, never()).notify(eq(user), eq("protection.protected"));
     }
+
+    /**
+     * Test method for {@link HurtingListener#onFishing(org.bukkit.event.player.PlayerFishEvent)}.
+     */
+    @Test
+    public void testOnFishingAllowWanderingTraderCatching() {
+        Villager entity = mock(Villager.class);
+        when(entity.getLocation()).thenReturn(location);
+        when(entity.getType()).thenReturn(EntityType.VILLAGER);
+        State state = State.CAUGHT_ENTITY;
+        PlayerFishEvent e = new PlayerFishEvent(player, entity, hookEntity, state);
+        HurtingListener hl = new HurtingListener();
+        // Allow
+        when(island.isAllowed(any(), any())).thenReturn(true);
+        hl.onFishing(e);
+        // Verify
+        verify(notifier, never()).notify(eq(user), eq("protection.protected"));
+    }
+
     /**
      * Test method for {@link HurtingListener#onPlayerFeedParrots(org.bukkit.event.player.PlayerInteractEntityEvent)}.
      */
+    @Ignore("Not yet implemented")
     @Test
     public void testOnPlayerFeedParrots() {
         //fail("Not yet implemented"); // TODO
@@ -361,6 +405,7 @@ public class HurtingListenerTest {
     /**
      * Test method for {@link HurtingListener#onSplashPotionSplash(org.bukkit.event.entity.PotionSplashEvent)}.
      */
+    @Ignore("Not yet implemented")
     @Test
     public void testOnSplashPotionSplash() {
         //fail("Not yet implemented"); // TODO
@@ -369,6 +414,7 @@ public class HurtingListenerTest {
     /**
      * Test method for {@link HurtingListener#onLingeringPotionSplash(org.bukkit.event.entity.LingeringPotionSplashEvent)}.
      */
+    @Ignore("Not yet implemented")
     @Test
     public void testOnLingeringPotionSplash() {
         //fail("Not yet implemented"); // TODO
@@ -377,6 +423,7 @@ public class HurtingListenerTest {
     /**
      * Test method for {@link HurtingListener#onLingeringPotionDamage(org.bukkit.event.entity.EntityDamageByEntityEvent)}.
      */
+    @Ignore("Not yet implemented")
     @Test
     public void testOnLingeringPotionDamage() {
         //fail("Not yet implemented"); // TODO

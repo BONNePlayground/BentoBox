@@ -42,89 +42,40 @@ public class BlockInteractionListener extends FlagListener {
      */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerInteract(final PlayerInteractEvent e) {
-        // For some items, we need to do a specific check for RIGHT_CLICK_BLOCK
-        if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)
-                && e.getClickedBlock().getType().equals(Material.ITEM_FRAME)) {
-            checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.ITEM_FRAME);
-            return;
-        }
-
         // We only care about the RIGHT_CLICK_BLOCK action.
         if (!e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             return;
         }
+
         // Check clicked block
         checkClickedBlock(e, e.getPlayer(), e.getClickedBlock().getLocation(), e.getClickedBlock().getType());
 
         // Now check for in-hand items
-        if (e.getItem() != null) {
-            if (e.getItem().getType().name().contains("BOAT")) {
-                checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.PLACE_BLOCKS);
-                return;
+        if (e.getItem() != null && !e.getItem().getType().equals(Material.AIR)) {
+            // Boats
+            if (e.getItem().getType().name().endsWith("_BOAT")) {
+                checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.BOAT);
             }
-            switch (e.getItem().getType()) {
-            case ENDER_PEARL:
-                checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.ENDER_PEARL);
-                break;
-            case BONE_MEAL:
-                checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.PLACE_BLOCKS);
-                break;
-            case BAT_SPAWN_EGG:
-            case BLAZE_SPAWN_EGG:
-            case CAVE_SPIDER_SPAWN_EGG:
-            case CHICKEN_SPAWN_EGG:
-            case COD_SPAWN_EGG:
-            case COW_SPAWN_EGG:
-            case CREEPER_SPAWN_EGG:
-            case DOLPHIN_SPAWN_EGG:
-            case DONKEY_SPAWN_EGG:
-            case DROWNED_SPAWN_EGG:
-            case ELDER_GUARDIAN_SPAWN_EGG:
-            case ENDERMAN_SPAWN_EGG:
-            case ENDERMITE_SPAWN_EGG:
-            case EVOKER_SPAWN_EGG:
-            case GHAST_SPAWN_EGG:
-            case GUARDIAN_SPAWN_EGG:
-            case HORSE_SPAWN_EGG:
-            case HUSK_SPAWN_EGG:
-            case LLAMA_SPAWN_EGG:
-            case MAGMA_CUBE_SPAWN_EGG:
-            case MOOSHROOM_SPAWN_EGG:
-            case MULE_SPAWN_EGG:
-            case OCELOT_SPAWN_EGG:
-            case PARROT_SPAWN_EGG:
-            case PHANTOM_SPAWN_EGG:
-            case PIG_SPAWN_EGG:
-            case POLAR_BEAR_SPAWN_EGG:
-            case PUFFERFISH_SPAWN_EGG:
-            case RABBIT_SPAWN_EGG:
-            case SALMON_SPAWN_EGG:
-            case SHEEP_SPAWN_EGG:
-            case SHULKER_SPAWN_EGG:
-            case SILVERFISH_SPAWN_EGG:
-            case SKELETON_HORSE_SPAWN_EGG:
-            case SKELETON_SPAWN_EGG:
-            case SLIME_SPAWN_EGG:
-            case SPIDER_SPAWN_EGG:
-            case SQUID_SPAWN_EGG:
-            case STRAY_SPAWN_EGG:
-            case TROPICAL_FISH_SPAWN_EGG:
-            case TURTLE_SPAWN_EGG:
-            case VEX_SPAWN_EGG:
-            case VILLAGER_SPAWN_EGG:
-            case VINDICATOR_SPAWN_EGG:
-            case WITCH_SPAWN_EGG:
-            case WITHER_SKELETON_SPAWN_EGG:
-            case WOLF_SPAWN_EGG:
-            case ZOMBIE_HORSE_SPAWN_EGG:
-            case ZOMBIE_PIGMAN_SPAWN_EGG:
-            case ZOMBIE_SPAWN_EGG:
-            case ZOMBIE_VILLAGER_SPAWN_EGG:
+            // Spawn eggs
+            else if (e.getItem().getType().name().endsWith("_SPAWN_EGG")) {
                 checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.SPAWN_EGGS);
-                break;
-            default:
-                break;
-
+            }
+            // Now check for in-hand items
+            if (e.getItem() != null) {
+                if (e.getItem().getType().name().contains("BOAT")) {
+                    checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.PLACE_BLOCKS);
+                    return;
+                }
+                switch (e.getItem().getType()) {
+                case ENDER_PEARL:
+                    checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.ENDER_PEARL);
+                    break;
+                case BONE_MEAL:
+                    checkIsland(e, e.getPlayer(), e.getClickedBlock().getLocation(), Flags.PLACE_BLOCKS);
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
@@ -331,4 +282,6 @@ public class BlockInteractionListener extends FlagListener {
         Optional<Island> toIsland = getIslands().getProtectedIslandAt(e.getToBlock().getLocation());
         fromIsland.ifPresent(from -> e.setCancelled(toIsland.map(to -> to != from).orElse(true)));
     }
+
+
 }

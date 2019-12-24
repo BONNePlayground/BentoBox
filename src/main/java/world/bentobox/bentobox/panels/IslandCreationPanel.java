@@ -5,10 +5,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bukkit.ChatColor;
 import org.eclipse.jdt.annotation.NonNull;
 
 import world.bentobox.bentobox.BentoBox;
-import world.bentobox.bentobox.api.addons.GameModeAddon;
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.panels.PanelItem;
 import world.bentobox.bentobox.api.panels.builders.PanelBuilder;
@@ -38,7 +38,7 @@ public class IslandCreationPanel {
         PanelBuilder pb = new PanelBuilder().name(user.getTranslation("commands.island.create.pick")).user(user);
         // Get the bundles
         Comparator<BlueprintBundle> sortByDisplayName = (p, o) -> p.getDisplayName().compareToIgnoreCase(o.getDisplayName());
-        List<BlueprintBundle> bbs = plugin.getBlueprintsManager().getBlueprintBundles((@NonNull GameModeAddon) command.getAddon()).values()
+        List<BlueprintBundle> bbs = plugin.getBlueprintsManager().getBlueprintBundles(command.getAddon()).values()
                 .stream().sorted(sortByDisplayName).collect(Collectors.toList());
         // Loop through them and create items in the panel
         for (BlueprintBundle bb : bbs) {
@@ -47,7 +47,9 @@ public class IslandCreationPanel {
                     || !bb.isRequirePermission()
                     || user.hasPermission(perm)) {
                 // Add an item
-                PanelItem item = new PanelItemBuilder().name(bb.getDisplayName()).description(bb.getDescription())
+                PanelItem item = new PanelItemBuilder()
+                        .name(bb.getDisplayName())
+                        .description(bb.getDescription().stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).collect(Collectors.toList()))
                         .icon(bb.getIcon()).clickHandler((panel, user1, clickType, slot1) -> {
                             user1.closeInventory();
                             command.execute(user1, label, Collections.singletonList(bb.getUniqueId()));

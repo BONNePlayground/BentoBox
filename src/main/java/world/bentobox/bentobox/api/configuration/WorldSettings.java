@@ -391,4 +391,26 @@ public interface WorldSettings extends ConfigObject {
      */
     boolean isKickedKeepInventory();
 
+    /* Create island on first login */
+
+    /**
+     *
+     * @return true if island should be created on first login
+     * @since 1.9.0
+     */
+    boolean isCreateIslandOnFirstLoginEnabled();
+
+    /**
+     *
+     * @return the island creation delay after login
+     * @since 1.9.0
+     */
+    int getCreateIslandOnFirstLoginDelay();
+
+    /**
+     *
+     * @return if island creation should abort on logout
+     * @since 1.9.0
+     */
+    boolean isCreateIslandOnFirstLoginAbortOnLogout();
 }

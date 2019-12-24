@@ -1,13 +1,10 @@
-/**
- *
- */
 package world.bentobox.bentobox.api.commands.admin.purge;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,10 +88,12 @@ public class AdminPurgeCommandTest {
         when(im.getIslands()).thenReturn(Collections.emptyList());
 
         // IWM
-
         IslandWorldManager iwm = mock(IslandWorldManager.class);
         when(iwm.getFriendlyName(any())).thenReturn("BSkyBlock");
         when(plugin.getIWM()).thenReturn(iwm);
+
+        // Island
+        when(island.isOwned()).thenReturn(true); // Default owned
 
         // Command
         apc = new AdminPurgeCommand(ac);
@@ -104,7 +103,8 @@ public class AdminPurgeCommandTest {
      * @throws java.lang.Exception
      */
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -205,6 +205,8 @@ public class AdminPurgeCommandTest {
         when(island.getPurgeProtected()).thenReturn(false);
         when(island.getWorld()).thenReturn(world);
         when(island.getOwner()).thenReturn(null);
+        when(island.isUnowned()).thenReturn(true);
+        when(island.isOwned()).thenReturn(false);
         when(im.getIslands()).thenReturn(Collections.singleton(island));
         assertTrue(apc.execute(user, "protect", Collections.singletonList("10")));
         verify(user).sendMessage(eq("commands.admin.purge.purgable-islands"), eq("[number]"), eq("0"));
@@ -255,6 +257,7 @@ public class AdminPurgeCommandTest {
         when(island.getPurgeProtected()).thenReturn(false);
         when(island.getWorld()).thenReturn(world);
         when(island.getOwner()).thenReturn(UUID.randomUUID());
+        when(island.isOwned()).thenReturn(true);
         Map<UUID, Integer> team = new HashMap<>();
         team.put(UUID.randomUUID(), RanksManager.OWNER_RANK);
         when(island.getMembers()).thenReturn(team);

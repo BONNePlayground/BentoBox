@@ -28,6 +28,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.addons.Addon;
 import world.bentobox.bentobox.api.events.OfflineMessageEvent;
+import world.bentobox.bentobox.util.Util;
 
 /**
  * Combines {@link Player}, {@link OfflinePlayer} and {@link CommandSender} to provide convenience methods related to
@@ -294,7 +295,7 @@ public class User {
         // If requester is console, then return the default value
         if (!isPlayer()) return defaultValue;
 
-        int value = defaultValue;
+        int value = 0;
 
         // If there is a dot at the end of the permissionPrefix, remove it
         if (permissionPrefix.endsWith(".")) {
@@ -308,10 +309,12 @@ public class User {
                 .filter(permission -> permission.startsWith(permPrefix))
                 .collect(Collectors.toList());
 
+        if (permissions.isEmpty()) return defaultValue;
+
         for (String permission : permissions) {
             if (permission.contains(permPrefix + "*")) {
                 // 'Star' permission
-                return value;
+                return defaultValue;
             } else {
                 String[] spl = permission.split(permPrefix);
                 if (spl.length > 1) {
@@ -384,7 +387,7 @@ public class User {
             translation = plugin.getPlaceholdersManager().replacePlaceholders(player, translation);
         }
 
-        return ChatColor.translateAlternateColorCodes('&', translation);
+        return Util.stripSpaceAfterColorCodes(ChatColor.translateAlternateColorCodes('&', translation));
     }
 
     /**

@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.util.Vector;
 
+import io.papermc.lib.PaperLib;
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.flags.FlagListener;
 import world.bentobox.bentobox.api.user.User;
@@ -147,7 +148,7 @@ public class LockAndBanListener extends FlagListener {
      */
     private void eject(Player player) {
         // Teleport player to their home
-        if (getIslands().hasIsland(player.getWorld(), player.getUniqueId())) {
+        if (getIslands().hasIsland(player.getWorld(), player.getUniqueId()) || getIslands().inTeam(player.getWorld(), player.getUniqueId())) {
             getIslands().homeTeleport(player.getWorld(), player);
         } else if (getIslands().getSpawn(player.getWorld()).isPresent()) {
             // Else, try to teleport him to the world spawn
@@ -155,14 +156,14 @@ public class LockAndBanListener extends FlagListener {
         } else {
             // There's nothing much we can do.
             // We'll try to teleport him to the spawn...
-            player.teleport(player.getWorld().getSpawnLocation());
+            PaperLib.teleportAsync(player, player.getWorld().getSpawnLocation());
 
             // Switch him back to the default gamemode. He may die, sorry :(
             player.setGameMode(getIWM().getDefaultGameMode(player.getWorld()));
 
             // Log
-            getPlugin().log("Could not teleport '" + player.getName() + "' back to his island or the spawn.");
-            getPlugin().log("Please consider setting a spawn for this world using the admin setspawn command.");
+            getPlugin().logWarning("Could not teleport '" + player.getName() + "' back to his island or the spawn.");
+            getPlugin().logWarning("Please consider setting a spawn for this world using the admin setspawn command.");
         }
     }
 }

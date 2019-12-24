@@ -2,7 +2,8 @@ package world.bentobox.bentobox.listeners.flags.worldsettings;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +26,7 @@ import org.powermock.reflect.Whitebox;
 
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.configuration.WorldSettings;
+import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.database.objects.Island;
 import world.bentobox.bentobox.lists.Flags;
 import world.bentobox.bentobox.managers.IslandWorldManager;
@@ -105,17 +108,10 @@ public class LiquidsFlowingOutListenerTest {
         when(islandsManager.getProtectedIslandAt(toLocation)).thenReturn(Optional.empty());
     }
 
-    /**
-     * Asserts that the event is never cancelled when the 'from' block is not liquid.
-     */
-    @Test
-    public void testFromIsNotLiquid() {
-        // The 'from' block is not liquid
-        when(from.isLiquid()).thenReturn(false);
-
-        // Run
-        new LiquidsFlowingOutListener().onLiquidFlow(event);
-        assertFalse(event.isCancelled());
+    @After
+    public void tearDown() {
+        User.clearUsers();
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -171,6 +167,24 @@ public class LiquidsFlowingOutListenerTest {
         // Run
         new LiquidsFlowingOutListener().onLiquidFlow(event);
         assertFalse(event.isCancelled());
+    }
+
+    /**
+     * Asserts that the event is cancelled when liquid flows from one island's protection range into different island's range,
+     * e.g., when islands abut.
+     * Test for {@link LiquidsFlowingOutListener#onLiquidFlow(BlockFromToEvent)}
+     */
+    @Test
+    public void testLiquidFlowsToAdjacentIsland() {
+        // There's a protected island at the "to"
+        Island island = mock(Island.class);
+        when(islandsManager.getProtectedIslandAt(eq(to.getLocation()))).thenReturn(Optional.of(island));
+        // There is another island at the "from"
+        Island fromIsland = mock(Island.class);
+        when(islandsManager.getProtectedIslandAt(eq(from.getLocation()))).thenReturn(Optional.of(fromIsland));
+        // Run
+        new LiquidsFlowingOutListener().onLiquidFlow(event);
+        assertTrue(event.isCancelled());
     }
 
     /**

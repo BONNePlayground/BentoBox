@@ -3,7 +3,11 @@ package world.bentobox.bentobox.listeners.flags.protection;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -35,6 +39,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -64,14 +69,21 @@ import world.bentobox.bentobox.util.Util;
 @PrepareForTest( {BentoBox.class, Flags.class, Util.class, Bukkit.class} )
 public class BucketListenerTest {
 
+    @Mock
     private Location location;
+    @Mock
     private BentoBox plugin;
+    @Mock
     private Notifier notifier;
 
     private BucketListener l;
+    @Mock
     private Player player;
+    @Mock
     private World world;
+    @Mock
     private Island island;
+    @Mock
     private IslandWorldManager iwm;
 
     /**
@@ -80,11 +92,9 @@ public class BucketListenerTest {
     @Before
     public void setUp() throws Exception {
         // Set up plugin
-        plugin = mock(BentoBox.class);
         Whitebox.setInternalState(BentoBox.class, "instance", plugin);
 
         Server server = mock(Server.class);
-        world = mock(World.class);
         when(server.getLogger()).thenReturn(Logger.getAnonymousLogger());
         when(server.getWorld("world")).thenReturn(world);
         when(server.getVersion()).thenReturn("BSB_Mocking");
@@ -102,7 +112,6 @@ public class BucketListenerTest {
         when(itemFactory.getItemMeta(any())).thenReturn(meta);
         when(Bukkit.getItemFactory()).thenReturn(itemFactory);
         when(Bukkit.getLogger()).thenReturn(Logger.getAnonymousLogger());
-        location = mock(Location.class);
         when(location.getWorld()).thenReturn(world);
         when(location.getBlockX()).thenReturn(0);
         when(location.getBlockY()).thenReturn(0);
@@ -114,7 +123,6 @@ public class BucketListenerTest {
 
 
         // Worlds
-        iwm = mock(IslandWorldManager.class);
         when(iwm.inWorld(any(World.class))).thenReturn(true);
         when(iwm.inWorld(any(Location.class))).thenReturn(true);
         when(plugin.getIWM()).thenReturn(iwm);
@@ -153,17 +161,17 @@ public class BucketListenerTest {
         when(island.isAllowed(Mockito.any(), Mockito.any())).thenReturn(true);
 
         // Notifier
-        notifier = mock(Notifier.class);
         when(plugin.getNotifier()).thenReturn(notifier);
 
         PowerMockito.mockStatic(Util.class);
         when(Util.getWorld(Mockito.any())).thenReturn(mock(World.class));
+        // Util strip spaces
+        when(Util.stripSpaceAfterColorCodes(anyString())).thenCallRealMethod();
 
         // Addon
         when(iwm.getAddon(Mockito.any())).thenReturn(Optional.empty());
 
         // Player
-        player = mock(Player.class);
         when(player.getLocation()).thenReturn(location);
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.getName()).thenReturn("tastybento");
@@ -178,8 +186,9 @@ public class BucketListenerTest {
      * @throws java.lang.Exception
      */
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         User.clearUsers();
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -189,7 +198,7 @@ public class BucketListenerTest {
     public void testOnBucketEmptyAllowed() {
         Block block = mock(Block.class);
         when(block.getLocation()).thenReturn(location);
-        when(block.getRelative(Mockito.any())).thenReturn(block);
+        when(block.getRelative(any())).thenReturn(block);
         ItemStack item = mock(ItemStack.class);
         PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, BlockFace.UP, Material.WATER_BUCKET, item);
         l.onBucketEmpty(e);
@@ -201,15 +210,15 @@ public class BucketListenerTest {
      */
     @Test
     public void testOnBucketEmptyNotAllowed() {
-        when(island.isAllowed(Mockito.any(), Mockito.any())).thenReturn(false);
+        when(island.isAllowed(any(), any())).thenReturn(false);
         Block block = mock(Block.class);
         when(block.getLocation()).thenReturn(location);
-        when(block.getRelative(Mockito.any())).thenReturn(block);
+        when(block.getRelative(any())).thenReturn(block);
         ItemStack item = mock(ItemStack.class);
         PlayerBucketEmptyEvent e = new PlayerBucketEmptyEvent(player, block, BlockFace.UP, Material.WATER_BUCKET, item);
         l.onBucketEmpty(e);
         assertTrue(e.isCancelled());
-        Mockito.verify(notifier).notify(Mockito.any(), Mockito.eq("protection.protected"));
+        verify(notifier).notify(any(), eq("protection.protected"));
     }
 
     /**
@@ -219,7 +228,7 @@ public class BucketListenerTest {
     public void testOnBucketFillAllowed() {
         Block block = mock(Block.class);
         when(block.getLocation()).thenReturn(location);
-        when(block.getRelative(Mockito.any())).thenReturn(block);
+        when(block.getRelative(any())).thenReturn(block);
         ItemStack item = mock(ItemStack.class);
         when(item.getType()).thenReturn(Material.WATER_BUCKET);
         PlayerBucketFillEvent e = new PlayerBucketFillEvent(player, block, BlockFace.UP, Material.WATER_BUCKET, item);
@@ -247,10 +256,10 @@ public class BucketListenerTest {
      */
     @Test
     public void testOnBucketFillNotAllowed() {
-        when(island.isAllowed(Mockito.any(), Mockito.any())).thenReturn(false);
+        when(island.isAllowed(any(), any())).thenReturn(false);
         Block block = mock(Block.class);
         when(block.getLocation()).thenReturn(location);
-        when(block.getRelative(Mockito.any())).thenReturn(block);
+        when(block.getRelative(any())).thenReturn(block);
         ItemStack item = mock(ItemStack.class);
         when(item.getType()).thenReturn(Material.WATER_BUCKET);
         PlayerBucketFillEvent e = new PlayerBucketFillEvent(player, block, BlockFace.UP, Material.WATER_BUCKET, item);
@@ -272,7 +281,7 @@ public class BucketListenerTest {
         l.onBucketFill(e);
         assertTrue(e.isCancelled());
 
-        Mockito.verify(notifier, Mockito.times(4)).notify(Mockito.any(), Mockito.eq("protection.protected"));
+        verify(notifier, times(4)).notify(any(), eq("protection.protected"));
     }
 
     /**
@@ -324,7 +333,7 @@ public class BucketListenerTest {
      */
     @Test
     public void testOnTropicalFishScoopingFishWaterBucketNotAllowed() {
-        when(island.isAllowed(Mockito.any(), Mockito.any())).thenReturn(false);
+        when(island.isAllowed(any(), any())).thenReturn(false);
         TropicalFish fish = mock(TropicalFish.class);
         when(fish.getLocation()).thenReturn(location);
         PlayerInteractEntityEvent e = new PlayerInteractEntityEvent(player, fish );
@@ -336,6 +345,6 @@ public class BucketListenerTest {
         l.onTropicalFishScooping(e);
         assertTrue(e.isCancelled());
 
-        Mockito.verify(notifier).notify(Mockito.any(), Mockito.eq("protection.protected"));
+        verify(notifier).notify(any(), eq("protection.protected"));
     }
 }

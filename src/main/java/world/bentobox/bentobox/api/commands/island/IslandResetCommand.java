@@ -126,6 +126,10 @@ public class IslandResetCommand extends ConfirmableCommand {
 
         // Add a reset
         getPlayers().addReset(getWorld(), user.getUniqueId());
+
+        // Reset the homes of the player
+        getPlayers().clearHomeLocations(getWorld(), user.getUniqueId());
+
         // Create new island and then delete the old one
         try {
             Builder builder = NewIsland.builder()
@@ -170,10 +174,14 @@ public class IslandResetCommand extends ConfirmableCommand {
                 command = command.replace("[player]", member.getName());
                 if (command.startsWith("[SUDO]") && member.isOnline()) {
                     // Execute the command by the player
-                    member.performCommand(command.substring(6));
+                    if (!member.performCommand(command.substring(6))) {
+                        getPlugin().logError("Could not execute leave command for " + member.getName() + ": " + command.substring(6));
+                    }
                 } else {
                     // Otherwise execute as the server console
-                    getPlugin().getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                    if (!getPlugin().getServer().dispatchCommand(Bukkit.getConsoleSender(), command)) {
+                        getPlugin().logError("Could not execute leave command as console: " + command);
+                    }
                 }
             });
 

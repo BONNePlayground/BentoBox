@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 
-import world.bentobox.bentobox.api.addons.GameModeAddon;
 import world.bentobox.bentobox.api.commands.ConfirmableCommand;
 import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.blueprints.BlueprintClipboard;
@@ -56,7 +55,7 @@ public class AdminBlueprintSaveCommand extends ConfirmableCommand {
         parent.hideClipboard(user);
         boolean result = new BlueprintClipboardManager(getPlugin(), parent.getBlueprintsFolder(), clipboard).save(user, name);
         if (result) {
-            getPlugin().getBlueprintsManager().addBlueprint((GameModeAddon)getAddon(), clipboard.getBlueprint());
+            getPlugin().getBlueprintsManager().addBlueprint(getAddon(), clipboard.getBlueprint());
         }
         return result;
     }

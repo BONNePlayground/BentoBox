@@ -29,12 +29,12 @@ public class PanelItem {
     private String name;
     private boolean glow;
     private ItemMeta meta;
-    private final boolean playerHead;
+    private String playerHeadName;
     private boolean invisible;
 
     public PanelItem(PanelItemBuilder builtItem) {
         this.icon = builtItem.getIcon();
-        this.playerHead = builtItem.isPlayerHead();
+        this.playerHeadName = builtItem.getPlayerHeadName();
         // Get the meta
         meta = icon.getItemMeta();
         if (meta != null) {
@@ -133,8 +133,16 @@ public class PanelItem {
      * @return the playerHead
      */
     public boolean isPlayerHead() {
-        return playerHead;
+        return playerHeadName != null && !playerHeadName.isEmpty();
     }
+    
+    /**
+     * @return the playerHeadName
+     * @since 1.9.0
+     */
+    public String getPlayerHeadName() {
+        return playerHeadName;
+    }      
 
     /**
      * Click handler interface

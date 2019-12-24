@@ -155,36 +155,16 @@ public class IslandWorldManager {
         // Call Multiverse
         registerToMultiverse(world, true);
         if (settings.isNetherGenerate()) {
-            if (!Bukkit.getAllowNether()) {
-                // Warn the users that players might not be able to teleport to these worlds later on
-                plugin.logWarning("'allow-nether' is set to 'false' in the server.properties file!");
-                plugin.logWarning("This means that players won't be able to teleport to the Nether through portals.");
-                plugin.logWarning("Please turn off the server and set 'allow-nether' to 'true' in the server.properties file.");
-            }
-
             gameModes.put(gameMode.getNetherWorld(), gameMode);
             if (settings.isNetherIslands()) {
                 registerToMultiverse(gameMode.getNetherWorld(), true);
             }
         }
         if (settings.isEndGenerate()) {
-            if (!Bukkit.getAllowEnd()) {
-                // Warn the users that players might not be able to teleport to these worlds later on
-                plugin.logWarning("'settings.allow-end' is set to 'false' in the bukkit.yml file!");
-                plugin.logWarning("This means that players won't be able to teleport to the End through portals.");
-                plugin.logWarning("Please turn off the server and set 'settings.allow-end' to 'true' in the bukkit.yml file.");
-            }
-
             gameModes.put(gameMode.getEndWorld(), gameMode);
             if (settings.isEndIslands()) {
                 registerToMultiverse(gameMode.getEndWorld(), true);
             }
-        }
-
-        // If allow-nether or allow-end is false, then we will send the user some help.
-        if ((settings.isNetherGenerate() && !Bukkit.getAllowNether()) || (settings.isEndGenerate() && !Bukkit.getAllowEnd())) {
-            plugin.logWarning("If this is intended in order to prevent the vanilla worlds from being generated, please read the following page:");
-            plugin.logWarning("https://github.com/BentoBoxWorld/BentoBox/wiki/Set-one-of-BentoBox-worlds-as-the-server-default-world");
         }
 
         // Set default island settings
@@ -319,28 +299,28 @@ public class IslandWorldManager {
      * @return the endGenerate
      */
     public boolean isEndGenerate(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isEndGenerate() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isEndGenerate();
     }
 
     /**
      * @return the endIslands
      */
     public boolean isEndIslands(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isEndIslands() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isEndIslands();
     }
 
     /**
      * @return the netherGenerate
      */
     public boolean isNetherGenerate(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isNetherGenerate() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isNetherGenerate();
     }
 
     /**
      * @return the netherIslands
      */
     public boolean isNetherIslands(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isNetherIslands() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isNetherIslands();
     }
 
     /**
@@ -531,21 +511,21 @@ public class IslandWorldManager {
      * @return the onJoinResetMoney
      */
     public boolean isOnJoinResetMoney(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetMoney() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetMoney();
     }
 
     /**
      * @return the onJoinResetInventory
      */
     public boolean isOnJoinResetInventory(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetInventory() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetInventory();
     }
 
     /**
      * @return the onJoinResetEnderChest
      */
     public boolean isOnJoinResetEnderChest(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetEnderChest() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetEnderChest();
     }
 
     /**
@@ -555,7 +535,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnJoinResetHealth(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetHealth() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetHealth();
     }
 
     /**
@@ -565,7 +545,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnJoinResetHunger(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetHunger() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetHunger();
     }
 
     /**
@@ -575,7 +555,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnJoinResetXP(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnJoinResetXP() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnJoinResetXP();
     }
 
     /**
@@ -594,21 +574,21 @@ public class IslandWorldManager {
      * @return the onLeaveResetMoney
      */
     public boolean isOnLeaveResetMoney(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetMoney() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetMoney();
     }
 
     /**
      * @return the onLeaveResetInventory
      */
     public boolean isOnLeaveResetInventory(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetInventory() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetInventory();
     }
 
     /**
      * @return the onLeaveResetEnderChest
      */
     public boolean isOnLeaveResetEnderChest(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetEnderChest() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetEnderChest();
     }
 
     /**
@@ -618,7 +598,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnLeaveResetHealth(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetHealth() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetHealth();
     }
 
     /**
@@ -628,7 +608,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnLeaveResetHunger(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetHunger() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetHunger();
     }
 
     /**
@@ -638,7 +618,7 @@ public class IslandWorldManager {
      * @since 1.8.0
      */
     public boolean isOnLeaveResetXP(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isOnLeaveResetXP() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isOnLeaveResetXP();
     }
 
     /**
@@ -704,7 +684,7 @@ public class IslandWorldManager {
     }
 
     public boolean isUseOwnGenerator(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isUseOwnGenerator() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isUseOwnGenerator();
     }
 
     /**
@@ -729,7 +709,7 @@ public class IslandWorldManager {
      * @return true if water is not safe, e.g.for home locations
      */
     public boolean isWaterNotSafe(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isWaterUnsafe() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isWaterUnsafe();
     }
 
     /**
@@ -773,7 +753,7 @@ public class IslandWorldManager {
      * @return true or false
      */
     public boolean isTeamJoinDeathReset(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isTeamJoinDeathReset() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isTeamJoinDeathReset();
     }
 
     /**
@@ -784,7 +764,7 @@ public class IslandWorldManager {
      * @since 1.6.0
      */
     public boolean isDeathsResetOnNewIsland(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isDeathsResetOnNewIsland() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isDeathsResetOnNewIsland();
     }
 
     /**
@@ -809,14 +789,43 @@ public class IslandWorldManager {
      * @return whether leavers should lose a reset or not
      */
     public boolean isLeaversLoseReset(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isLeaversLoseReset() : false;
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isLeaversLoseReset();
     }
 
     /**
      * @return whether players keep their inventory if they are kicked. Overrides leave inventory clearing
      */
     public boolean isKickedKeepInventory(@NonNull World world) {
-        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().isKickedKeepInventory() : true;
+        return !gameModes.containsKey(world) || gameModes.get(world).getWorldSettings().isKickedKeepInventory();
     }
 
+    /**
+     *
+     * @param world - world
+     * @return true if successful
+     * @since 1.9.0
+     */
+    public boolean isCreateIslandOnFirstLoginEnabled(@NonNull World world) {
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isCreateIslandOnFirstLoginEnabled();
+    }
+
+    /**
+     *
+     * @param world - world
+     * @return delay value
+     * @since 1.9.0
+     */
+    public int getCreateIslandOnFirstLoginDelay(@NonNull World world) {
+        return gameModes.containsKey(world) ? gameModes.get(world).getWorldSettings().getCreateIslandOnFirstLoginDelay() : 0;
+    }
+
+    /**
+     *
+     * @param world - world
+     * @return true if creation should happen
+     * @since 1.9.0
+     */
+    public boolean isCreateIslandOnFirstLoginAbortOnLogout(@NonNull World world) {
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isCreateIslandOnFirstLoginAbortOnLogout();
+    }
 }
