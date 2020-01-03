@@ -254,7 +254,7 @@ public class PlaceBlocksListenerTest {
     public void testOnBlockPlaceBook() {
         when(island.isAllowed(Mockito.any(), Mockito.any())).thenReturn(false);
         Block placedBlock = mock(Block.class);
-        when(placedBlock.getType()).thenReturn(Material.LECTERN);
+//        when(placedBlock.getType()).thenReturn(Material.LECTERN);
         when(placedBlock.getLocation()).thenReturn(location);
         BlockState replacedBlockState = mock(BlockState.class);
         Block placedAgainst = mock(Block.class);
