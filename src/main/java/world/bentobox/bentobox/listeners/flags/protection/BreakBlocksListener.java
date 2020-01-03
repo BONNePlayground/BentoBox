@@ -4,12 +4,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.AbstractArrow;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EnderCrystal;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+//import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
@@ -141,7 +137,7 @@ public class BreakBlocksListener extends FlagListener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onProjectileHitBreakBlock(ProjectileHitEvent e) {
         // We want to make sure this is an actual projectile (arrow or trident)
-        if (!(e.getEntity() instanceof AbstractArrow)) {
+        if (!(e.getEntity() instanceof Arrow)) {
             return;
         }
 
