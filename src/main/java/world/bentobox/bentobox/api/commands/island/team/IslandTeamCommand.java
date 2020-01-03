@@ -10,10 +10,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
-
 import org.bukkit.OfflinePlayer;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.events.IslandBaseEvent;
 import world.bentobox.bentobox.api.events.team.TeamEvent;
@@ -29,12 +29,6 @@ public class IslandTeamCommand extends CompositeCommand {
      * @since 1.8.0
      */
     private Map<UUID, Invite> inviteMap;
-
-    /**
-     * Contains the text variable for units.
-     * @since 1.9.0
-     */
-    private final String UNIT = "[unit]";
 
     private IslandTeamInviteCommand inviteCommand;
 
@@ -143,15 +137,15 @@ public class IslandTeamCommand extends CompositeCommand {
                         if (duration.toMinutes() < 60L) {
                             lastSeen = user.getTranslation(reference,
                                     TextVariables.NUMBER, String.valueOf(duration.toMinutes()),
-                                    UNIT, user.getTranslation("commands.island.team.info.last-seen.minutes"));
+                                    TextVariables.UNIT, user.getTranslation("commands.island.team.info.last-seen.minutes"));
                         } else if (duration.toHours() < 24L) {
                             lastSeen = user.getTranslation(reference,
                                     TextVariables.NUMBER, String.valueOf(duration.toHours()),
-                                    UNIT, user.getTranslation("commands.island.team.info.last-seen.hours"));
+                                    TextVariables.UNIT, user.getTranslation("commands.island.team.info.last-seen.hours"));
                         } else {
                             lastSeen = user.getTranslation(reference,
                                     TextVariables.NUMBER, String.valueOf(duration.toDays()),
-                                    UNIT, user.getTranslation("commands.island.team.info.last-seen.days"));
+                                    TextVariables.UNIT, user.getTranslation("commands.island.team.info.last-seen.days"));
                         }
 
                         user.sendMessage("commands.island.team.info.member-layout.offline",

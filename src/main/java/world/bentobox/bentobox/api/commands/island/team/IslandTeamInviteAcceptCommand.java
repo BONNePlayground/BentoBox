@@ -44,20 +44,20 @@ public class IslandTeamInviteAcceptCommand extends ConfirmableCommand {
             user.sendMessage("commands.island.team.invite.errors.none-invited-you");
             return false;
         }
-        // Check if player is already in a team
-        if (getIslands().inTeam(getWorld(), playerUUID)) {
-            user.sendMessage("commands.island.team.invite.errors.you-already-are-in-team");
-            return false;
-        }
         // Get the island owner
         prospectiveOwnerUUID = itc.getInviter(playerUUID);
-        if (!getIslands().hasIsland(getWorld(), prospectiveOwnerUUID)) {
+        if (prospectiveOwnerUUID == null || !getIslands().hasIsland(getWorld(), prospectiveOwnerUUID)) {
             user.sendMessage("commands.island.team.invite.errors.invalid-invite");
             itc.removeInvite(playerUUID);
             return false;
         }
         Invite invite = itc.getInvite(playerUUID);
         if (invite.getType().equals(Type.TEAM)) {
+            // Check if player is already in a team
+            if (getIslands().inTeam(getWorld(), playerUUID)) {
+                user.sendMessage("commands.island.team.invite.errors.you-already-are-in-team");
+                return false;
+            }
             // Fire event so add-ons can run commands, etc.
             IslandBaseEvent event = TeamEvent.builder()
                     .island(getIslands().getIsland(getWorld(), prospectiveOwnerUUID))
@@ -118,8 +118,6 @@ public class IslandTeamInviteAcceptCommand extends ConfirmableCommand {
     private void acceptTeamInvite(User user, Invite invite) {
         // Remove the invite
         itc.removeInvite(playerUUID);
-        // Put player into Spectator mode
-        user.setGameMode(GameMode.SPECTATOR);
         // Get the player's island - may be null if the player has no island
         Island island = getIslands().getIsland(getWorld(), playerUUID);
         // Get the team's island
@@ -157,7 +155,6 @@ public class IslandTeamInviteAcceptCommand extends ConfirmableCommand {
                 .involvedPlayer(playerUUID)
                 .build();
         Bukkit.getPluginManager().callEvent(e);
-
     }
 
     private void cleanPlayer(User user) {

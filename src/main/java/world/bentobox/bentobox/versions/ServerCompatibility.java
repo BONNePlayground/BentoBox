@@ -73,7 +73,7 @@ public class ServerCompatibility {
         BUKKIT(Compatibility.INCOMPATIBLE),
         GLOWSTONE(Compatibility.INCOMPATIBLE),
         SPIGOT(Compatibility.COMPATIBLE),
-        PAPER(Compatibility.NOT_SUPPORTED),
+        PAPER(Compatibility.SUPPORTED),
         TACOSPIGOT(Compatibility.NOT_SUPPORTED),        
         AKARIN(Compatibility.NOT_SUPPORTED);
 
@@ -99,27 +99,33 @@ public class ServerCompatibility {
         /**
          * @since 1.5.0
          */
-        V1_14(Compatibility.NOT_SUPPORTED),
+        V1_14(Compatibility.INCOMPATIBLE),
         /**
          * @since 1.5.0
          */
-        V1_14_1(Compatibility.NOT_SUPPORTED),
+        V1_14_1(Compatibility.INCOMPATIBLE),
         /**
          * @since 1.5.0
          */
-        V1_14_2(Compatibility.NOT_SUPPORTED),
+        V1_14_2(Compatibility.INCOMPATIBLE),
         /**
          * @since 1.6.0
          */
-        V1_14_3(Compatibility.NOT_SUPPORTED),
+        V1_14_3(Compatibility.INCOMPATIBLE),
         /**
          * @since 1.6.0
          */
-        V1_14_4(Compatibility.NOT_SUPPORTED),
+        V1_14_4(Compatibility.INCOMPATIBLE),
         /**
          * @since 1.9.2
          */
-        V1_15(Compatibility.NOT_SUPPORTED);
+        V1_15(Compatibility.INCOMPATIBLE),
+        /**
+         * @since 1.10.0
+         */
+        V1_15_1(Compatibility.INCOMPATIBLE)
+        ;
+        
 
         private Compatibility compatibility;
 

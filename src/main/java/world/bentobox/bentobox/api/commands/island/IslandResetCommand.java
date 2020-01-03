@@ -142,7 +142,7 @@ public class IslandResetCommand extends ConfirmableCommand {
             builder.build();
         } catch (IOException e) {
             getPlugin().logError("Could not create island for player. " + e.getMessage());
-            user.sendMessage("commands.island.create.unable-create-island");
+            user.sendMessage(e.getMessage());
             return false;
         }
         setCooldown(user.getUniqueId(), getSettings().getResetCooldown());

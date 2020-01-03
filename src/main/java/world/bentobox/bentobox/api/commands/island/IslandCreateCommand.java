@@ -96,7 +96,7 @@ public class IslandCreateCommand extends CompositeCommand {
             .build();
         } catch (IOException e) {
             getPlugin().logError("Could not create island for player. " + e.getMessage());
-            user.sendMessage("commands.island.create.unable-create-island");
+            user.sendMessage(e.getMessage());
             return false;
         }
         if (getSettings().isResetCooldownOnCreate()) {

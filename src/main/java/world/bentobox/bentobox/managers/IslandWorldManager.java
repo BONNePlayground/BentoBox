@@ -828,4 +828,32 @@ public class IslandWorldManager {
     public boolean isCreateIslandOnFirstLoginAbortOnLogout(@NonNull World world) {
         return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isCreateIslandOnFirstLoginAbortOnLogout();
     }
+
+    /**
+     * Check if nether or end islands should be pasted on teleporting
+     * @param world - over world
+     * @return true if missing nether or end islands should be pasted
+     * @since 1.10.0
+     */
+    public boolean isPasteMissingIslands(@NonNull World world) {
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isPasteMissingIslands();
+    }
+
+    /**
+     * Toggles whether the player should be teleported on his island after it got created.
+     * <br/>
+     * If set to {@code true}, the player will be teleported right away.
+     * <br/>
+     * If set to {@code false}, the player will remain where he is and a message will be sent inviting him to teleport to his island.
+     * <br/><br/>
+     * This does not apply to any other occurrences such as island reset, or island join.
+     * <br/><br/>
+     * Default value: {@code true} (to retain backward compatibility).
+     * @param world world, not null.
+     * @return {@code true} if the player should be teleported to his island, {@code false} otherwise.
+     * @since 1.10.0
+     */
+    public boolean isTeleportPlayerToIslandUponIslandCreation(@NonNull World world) {
+        return gameModes.containsKey(world) && gameModes.get(world).getWorldSettings().isTeleportPlayerToIslandUponIslandCreation();
+    }
 }

@@ -118,6 +118,10 @@ commands:
         success: "&b [name]&a  is now the owner of this island."
     range:
       description: "Admin island range command"
+      invalid-value:
+        too-low: "&c The protection range must be greater than &b 1&c !"
+        too-high: "&c The protection range should be equal or less than &b [number]&c !"
+        same-as-before: "&c The protection range is already set to &b [number]&c !"
       display:
         already-off: "&c Indicators are already off"
         already-on: "&c Indicators are already on"
@@ -131,16 +135,19 @@ commands:
       set:
         parameters: "<player> <range>"
         description: "sets the island protected range"
-        invalid-value:
-          not-numeric: "&c [number] is not a whole number!"
-          too-low: "&c The protection range must be greater than &b 1&c !"
-          too-high: "&c The protection range should be equal or less than &b [number]&c !"
-          same-as-before: "&c The protection range is already set to &b [number]&c !"
         success: "&a Set island protection range to &b [number]&a ."
       reset:
         parameters: "<player>"
         description: "resets the island protected range to the world default"
         success: "&a Reset island protection range to &b [number]&a ."
+      add:
+        description: "increases the island protected range"
+        parameters: "<player> <range>"
+        success: "&a Successfully increased &b [name]&a 's island protected range to &b [total] &7 (&b +[number]&7 )&a ."
+      remove:
+        description: "decreases the island protected range"
+        parameters: "<player> <range>"
+        success: "&a Successfully decreased &b [name]&a 's island protected range to &b [total] &7 (&b -[number]&7 )&a ."
     register:
       parameters: "<player>"
       description: "register player to unowned island you are on"
@@ -282,6 +289,11 @@ commands:
       save:
         parameters: "<blueprint name>"
         description: "save the copied clipboard"
+      rename:
+        parameters: "<blueprint name> <new name>"
+        description: "rename a blueprint"
+        success: "&a Blueprint &b [old] &a has been successfully renamed to &b [name]&a."
+        pick-different-name: "&c Please specify a name that is different from the blueprint's current name."
       management:
         back: "Back"
         instruction: "Click on blueprint then click here"
@@ -422,7 +434,6 @@ commands:
       teleported: "&a Teleported you to home &e #[number]."
     help:
       description: "The main island command"
-      pick-world: "&c Specify world from [worlds]"
     spawn:
       description: "teleport you to the spawn"
       teleporting: "&a Teleporting you to the spawn."
@@ -431,8 +442,9 @@ commands:
       description: "create an island, using optional blueprint (requires permission)"
       parameters: "<blueprint>"
       too-many-islands: "&c There are too many islands in this world: there isn't enough room for yours to be created."
+      cannot-create-island: "&c A spot could not be found in time, please try again..."
       unable-create-island: "&c Your island could not be generated, please contact an administrator."
-      creating-island: "&a We found a spot for your island, let us prepare it for you."
+      creating-island: "&a Finding a spot for your island..."
       pasting:
         estimated-time: "&a Estimated time: &b [number] &a seconds."
         blocks: "&a Building it block by block: &b [number] &a blocks in all..."
@@ -441,6 +453,7 @@ commands:
       pick: "&2 Pick an island"
       unknown-blueprint: "&c That blueprint has not been loaded yet."
       on-first-login: "&a Welcome! We will start preparing your island in a few seconds."
+      you-can-teleport-to-your-island: "&a You can teleport to your island when you please."
     info:
       description: "display info about your island or the player's island"
       parameters: "<player>"
@@ -921,6 +934,15 @@ protection:
     LEASH: 
       description: "Toggle use"
       name: "Leash use"
+    LECTERN:
+      name: "Lecterns"
+      description: |-
+        &a Allow to place books on a lectern
+        &a or to take books from it.
+
+        &c It does not prevent players from
+        &c reading the books.
+      hint: "cannot place a book on a lectern or take a book from it."
     LEVER:
       description: "Toggle use"
       name: "Lever use"

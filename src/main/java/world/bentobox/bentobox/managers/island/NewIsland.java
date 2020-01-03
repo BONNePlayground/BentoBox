@@ -35,7 +35,7 @@ public class NewIsland {
 
     private NewIslandLocationStrategy locationStrategy;
 
-    public NewIsland(Builder builder) {
+    public NewIsland(Builder builder) throws IOException {
         plugin = BentoBox.getInstance();
         this.user = builder.user2;
         this.reason = builder.reason2;
@@ -93,7 +93,14 @@ public class NewIsland {
             return this;
         }
 
+        /**
+         * Sets the reason
+         * @param reason reason, can only be {@link Reason#CREATE} or {@link Reason#RESET}.
+         */
         public Builder reason(Reason reason) {
+            if (!reason.equals(Reason.CREATE) && !reason.equals(Reason.RESET)) {
+                throw new IllegalArgumentException("Reason must be CREATE or RESET.");
+            }
             this.reason2 = reason;
             return this;
         }
@@ -135,7 +142,7 @@ public class NewIsland {
 
         /**
          * @return Island
-         * @throws IOException - if there are insufficient parameters defined
+         * @throws Exception
          */
         public Island build() throws IOException {
             if (user2 != null) {
@@ -149,8 +156,9 @@ public class NewIsland {
     /**
      * Makes an island.
      * @param oldIsland old island that is being replaced, if any
+     * @throws IOException - if an island cannot be made. Message is the tag to show the user.
      */
-    public void newIsland(Island oldIsland) {
+    public void newIsland(Island oldIsland) throws IOException {
         Location next = null;
         if (plugin.getIslands().hasIsland(world, user)) {
             // Island exists, it just needs pasting
@@ -168,14 +176,15 @@ public class NewIsland {
         if (next == null) {
             next = this.locationStrategy.getNextLocation(world);
             if (next == null) {
-                plugin.logError("Failed to make island - no unoccupied spot found");
-                return;
+                plugin.logError("Failed to make island - no unoccupied spot found.");
+                plugin.logError("If the world was imported, try multiple times until all unowned islands are known.");
+                throw new IOException("commands.island.create.cannot-create-island");
             }
             // Add to the grid
             island = plugin.getIslands().createIsland(next, user.getUniqueId());
             if (island == null) {
                 plugin.logError("Failed to make island! Island could not be added to the grid.");
-                return;
+                throw new IOException("commands.island.create.unable-create-island");
             }
         }
 
@@ -229,11 +238,16 @@ public class NewIsland {
             }
             // Stop the player from falling or moving if they are
             if (user.isOnline()) {
-                user.getPlayer().setVelocity(new Vector(0,0,0));
-                user.getPlayer().setFallDistance(0F);
+                if (reason.equals(Reason.RESET) || (reason.equals(Reason.CREATE) && plugin.getIWM().isTeleportPlayerToIslandUponIslandCreation(world))) {
+                    user.getPlayer().setVelocity(new Vector(0, 0, 0));
+                    user.getPlayer().setFallDistance(0F);
 
-                // Teleport player after this island is built
-                plugin.getIslands().homeTeleport(world, user.getPlayer(), true);
+                    // Teleport player after this island is built
+                    plugin.getIslands().homeTeleport(world, user.getPlayer(), true);
+                } else {
+                    // let's send him a message so that he knows he can teleport to his island!
+                    user.sendMessage("commands.island.create.you-can-teleport-to-your-island");
+                }
             } else {
                 // Remove the player again to completely clear the data
                 User.removePlayer(user.getPlayer());
@@ -271,9 +285,7 @@ public class NewIsland {
         }
         // Set default settings
         island.setFlagsDefaults();
-        if (!reason.equals(Reason.RESERVED)) {
-            plugin.getMetrics().ifPresent(BStats::increaseIslandsCreatedCount);
-        }
+        plugin.getMetrics().ifPresent(BStats::increaseIslandsCreatedCount);
         // Save island
         plugin.getIslands().save(island);
     }

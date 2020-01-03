@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringUtils;
-
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.localization.TextVariables;
 import world.bentobox.bentobox.api.user.User;
@@ -40,14 +38,14 @@ public class AdminRangeSetCommand extends CompositeCommand {
             user.sendMessage("general.errors.unknown-player", TextVariables.NAME, args.get(0));
             return false;
         }
-        if (!getPlugin().getIslands().hasIsland(getWorld(), targetUUID)) {
+        if (!(getIslands().hasIsland(getWorld(), targetUUID) || getIslands().inTeam(getWorld(), targetUUID))) {
             user.sendMessage("general.errors.player-has-no-island");
             return false;
         }
 
         // Get new range
-        if (!StringUtils.isNumeric(args.get(1))) {
-            user.sendMessage("commands.admin.range.set.invalid-value.not-numeric", TextVariables.NUMBER, args.get(1));
+        if (!Util.isInteger(args.get(1), true) || Integer.parseInt(args.get(1)) < 0) {
+            user.sendMessage("general.errors.must-be-positive-number", TextVariables.NUMBER, args.get(1));
             return false;
         }
         int range = Integer.parseInt(args.get(1));
@@ -57,15 +55,15 @@ public class AdminRangeSetCommand extends CompositeCommand {
 
         // Do some sanity checks to make sure the new protection range won't cause problems
         if (range <= 1) {
-            user.sendMessage("commands.admin.range.set.invalid-value.too-low", TextVariables.NUMBER, args.get(1));
+            user.sendMessage("commands.admin.range.invalid-value.too-low", TextVariables.NUMBER, args.get(1));
             return false;
         }
         if (range > island.getRange()) {
-            user.sendMessage("commands.admin.range.set.invalid-value.too-high", TextVariables.NUMBER, String.valueOf(island.getRange()));
+            user.sendMessage("commands.admin.range.invalid-value.too-high", TextVariables.NUMBER, String.valueOf(island.getRange()));
             return false;
         }
         if (range == island.getProtectionRange()) {
-            user.sendMessage("commands.admin.range.set.invalid-value.same-as-before", TextVariables.NUMBER, args.get(1));
+            user.sendMessage("commands.admin.range.invalid-value.same-as-before", TextVariables.NUMBER, args.get(1));
             return false;
         }
 
