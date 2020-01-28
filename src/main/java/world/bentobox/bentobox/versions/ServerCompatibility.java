@@ -123,7 +123,11 @@ public class ServerCompatibility {
         /**
          * @since 1.10.0
          */
-        V1_15_1(Compatibility.INCOMPATIBLE)
+        V1_15_1(Compatibility.INCOMPATIBLE),
+        /**
+         * @since 1.11.0
+         */
+        V1_15_2(Compatibility.INCOMPATIBLE)
         ;
         
 
