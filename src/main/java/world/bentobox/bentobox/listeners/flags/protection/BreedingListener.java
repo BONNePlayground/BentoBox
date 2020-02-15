@@ -42,14 +42,14 @@ public class BreedingListener extends FlagListener {
             .put(EntityType.WOLF, Arrays.asList(Material.PORKCHOP, Material.COOKED_PORKCHOP, Material.BEEF, Material.COOKED_BEEF,
                     Material.CHICKEN, Material.COOKED_CHICKEN, Material.RABBIT, Material.COOKED_RABBIT,
                     Material.MUTTON, Material.COOKED_MUTTON, Material.ROTTEN_FLESH))
-            .put(EntityType.CAT, Arrays.asList(Material.COD, Material.SALMON))
+//            .put(EntityType.CAT, Arrays.asList(Material.COD, Material.SALMON))
             .put(EntityType.OCELOT, Arrays.asList(Material.COD, Material.SALMON))
             .put(EntityType.RABBIT, Arrays.asList(Material.DANDELION, Material.CARROT, Material.GOLDEN_CARROT))
             .put(EntityType.LLAMA, Collections.singletonList(Material.HAY_BLOCK))
-            .put(EntityType.TRADER_LLAMA, Collections.singletonList(Material.HAY_BLOCK))
+//            .put(EntityType.TRADER_LLAMA, Collections.singletonList(Material.HAY_BLOCK))
             .put(EntityType.TURTLE, Collections.singletonList(Material.SEAGRASS))
-            .put(EntityType.PANDA, Collections.singletonList(Material.BAMBOO))
-            .put(EntityType.FOX, Collections.singletonList(Material.SWEET_BERRIES))
+//            .put(EntityType.PANDA, Collections.singletonList(Material.BAMBOO))
+//            .put(EntityType.FOX, Collections.singletonList(Material.SWEET_BERRIES))
             .build();
 
     //TODO: add bees when switching to 1.15.x only
