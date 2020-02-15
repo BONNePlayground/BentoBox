@@ -67,11 +67,11 @@
         <!-- Non-minecraft related dependencies -->
         <powermock.version>2.0.4</powermock.version>
         <mongodb.version>3.8.0</mongodb.version>
-        <!-- More visible way how to change dependency versions -->
+        <!-- More visible way to change dependency versions -->
         <spigot.version>1.13.2-R0.1-SNAPSHOT</spigot.version>
         <bstats.version>1.5</bstats.version>
         <vault.version>1.7</vault.version>
-        <placeholderapi.version>2.10.3</placeholderapi.version>
+        <placeholderapi.version>2.10.4</placeholderapi.version>
         <mvdwplaceholderapi.version>master-SNAPSHOT</mvdwplaceholderapi.version>
         <githubapi.version>d5f5e0bbd8</githubapi.version>
         <dynmap.version>3.0-SNAPSHOT</dynmap.version>
@@ -81,14 +81,14 @@
         <!-- Do not change unless you want different name for local builds. -->
         <build.number>-1.13.2-LOCAL</build.number>
         <!-- This allows to change between versions. -->
-        <build.version>1.11.0</build.version>
+        <build.version>1.11.1</build.version>
     </properties>
 
     <!-- Profiles will allow to automatically change build version. -->
     <profiles>
         <profile>
             <!-- ci profile is activated if exist environment variable BUILD_NUMBER. -->
-            <!-- It replaces ${build.number} that is currently '-LOCAL' with
+            <!-- It replaces ${build.number} that is currently '-LOCAL' with 
                 correct build number from JENKINS machine. -->
             <id>ci</id>
             <activation>
@@ -102,13 +102,13 @@
             </properties>
         </profile>
         <profile>
-            <!-- Master profile is activated if exist environment variable
+            <!-- Master profile is activated if exist environment variable 
                 GIT_BRANCH and its value is origin/master. -->
-            <!-- It will replace 'revision' with '${build.version}' so it
+            <!-- It will replace 'revision' with '${build.version}' so it 
                 removes '-SNAPSHOT' string at the end. -->
-            <!-- Also, as this is release build, build number can be set
+            <!-- Also, as this is release build, build number can be set 
                 to empty string. -->
-            <!-- This profile will be used only if exist environment variable
+            <!-- This profile will be used only if exist environment variable 
                 GIT_BRANCH with value origin/master. -->
             <id>master</id>
             <activation>
@@ -242,8 +242,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <!-- We have to use a forked version of this api because Maxim
-                had the brilliant idea to make one of the dependencies rely on an illegal
+            <!-- We have to use a forked version of this api because Maxim 
+                had the brilliant idea to make one of the dependencies rely on an illegal 
                 artifact thus making its repository unusable. -->
             <groupId>com.github.BentoBoxWorld</groupId>
             <artifactId>MVdWPlaceholderAPI</artifactId>
@@ -270,8 +270,8 @@
             <version>${githubapi.version}</version>
         </dependency>
         <!-- Static analysis -->
-        <!-- We are using Eclipse's annotations. If you're using IDEA, update
-            your project settings to take these into account for in real time static
+        <!-- We are using Eclipse's annotations. If you're using IDEA, update 
+            your project settings to take these into account for in real time static 
             analysis -->
         <dependency>
             <groupId>org.eclipse.jdt</groupId>
@@ -289,12 +289,12 @@
 
     <build>
         <!-- By default ${revision} is ${build.version}-SNAPSHOT -->
-        <!-- If GIT_BRANCH variable is set to origin/master, then it will
+        <!-- If GIT_BRANCH variable is set to origin/master, then it will 
             be only ${build.version}. -->
 
         <!-- By default ${build.number} is -LOCAL. -->
         <!-- If the BUILD_NUMBER variable is set, then it will be -b[number]. -->
-        <!-- If GIT_BRANCH variable is set to origin/master, then it will
+        <!-- If GIT_BRANCH variable is set to origin/master, then it will 
             be the empty string. -->
         <finalName>${project.name}-${revision}${build.number}</finalName>
 
@@ -398,7 +398,7 @@
                     </relocations>
                     <artifactSet>
                         <excludes>
-                            <exclude>com.google:*</exclude>
+                            <exclude>com.google.code.gson:*</exclude>
                             <exclude>org.mongodb:*</exclude>
                             <exclude>org.eclipse.jdt:*</exclude>
                         </excludes>
@@ -439,7 +439,7 @@
                 <configuration>
                     <append>true</append>
                     <excludes>
-                        <!-- This is required to prevent Jacoco from adding
+                        <!-- This is required to prevent Jacoco from adding 
                             synthetic fields to a JavaBean class (causes errors in testing) -->
                         <exclude>**/*Names*</exclude>
                     </excludes>

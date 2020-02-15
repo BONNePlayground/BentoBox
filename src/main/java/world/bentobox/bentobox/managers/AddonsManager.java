@@ -37,6 +37,7 @@ import world.bentobox.bentobox.api.configuration.ConfigObject;
 import world.bentobox.bentobox.api.events.addon.AddonEvent;
 import world.bentobox.bentobox.commands.BentoBoxCommand;
 import world.bentobox.bentobox.database.objects.DataObject;
+import world.bentobox.bentobox.util.Util;
 
 /**
  * @author tastybento, ComminQ
@@ -213,24 +214,27 @@ public class AddonsManager {
         plugin.logWarning("NOTE: DO NOT report this as a bug from BentoBox.");
     }
 
+    private boolean isAddonCompatibleWithBentoBox(@NonNull Addon addon) {
+        return isAddonCompatibleWithBentoBox(addon, plugin.getDescription().getVersion());
+    }
+
     /**
      * Checks if the addon does not explicitly rely on API from a more recent BentoBox version.
      * @param addon instance of the Addon.
+     * @param pluginVersion plugin version string.
      * @return {@code true} if the addon relies on available BentoBox API, {@code false} otherwise.
      * @since 1.11.0
      */
-    private boolean isAddonCompatibleWithBentoBox(@NonNull Addon addon) {
-        // We have to use lists instead of arrays for dynamic changes and optimization (appending something to an array is O(n) whereas O(1) with lists).
-        List<String> apiVersion = Arrays.asList(addon.getDescription().getApiVersion().split("\\."));
-        List<String> bentoboxVersion = Arrays.asList(plugin.getDescription().getVersion().split("\\."));
+    boolean isAddonCompatibleWithBentoBox(@NonNull Addon addon, String pluginVersion) {
+        String[] apiVersion = addon.getDescription().getApiVersion().split("\\D");
+        String[] bentoboxVersion = pluginVersion.split("\\D");
 
-        while (bentoboxVersion.size() < apiVersion.size()) {
-            bentoboxVersion.add("0");
-        }
-
-        for (int i = 0; i < apiVersion.size(); i++) {
-            int apiNumber = Integer.parseInt(apiVersion.get(i));
-            int bentoboxNumber = Integer.parseInt(bentoboxVersion.get(i));
+        for (int i = 0; i < apiVersion.length; i++) {
+            int bentoboxNumber = 0;
+            if (i < bentoboxVersion.length && Util.isInteger(bentoboxVersion[i], false)) {
+                bentoboxNumber = Integer.parseInt(bentoboxVersion[i]);
+            }
+            int apiNumber = Util.isInteger(apiVersion[i], false) ? Integer.parseInt(apiVersion[i]) : -1;
             if (bentoboxNumber < apiNumber) {
                 return false;
             }
@@ -354,11 +358,14 @@ public class AddonsManager {
     /**
      * Finds a class by name that has been loaded by this loader
      * @param name name of the class, not null
-     * @return Class the class
+     * @return Class the class or null if not found
      */
     @Nullable
     public Class<?> getClassByName(@NonNull final String name) {
-        return classes.getOrDefault(name, loaders.values().stream().map(l -> l.findClass(name, false)).filter(Objects::nonNull).findFirst().orElse(null));
+        try {
+            return classes.getOrDefault(name, loaders.values().stream().map(l -> l.findClass(name, false)).filter(Objects::nonNull).findFirst().orElse(null));
+        } catch (Exception e) {}
+        return null;
     }
 
     /**

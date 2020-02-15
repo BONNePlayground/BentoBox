@@ -34,8 +34,6 @@ general:
     wrong-world: "&c You are not in the right world to do that!"
     you-must-wait: "&c You must wait [number]s before you can do that command again."
     must-be-positive-number: "&c [number] is not a valid positive number."
-  tips:
-    changing-obsidian-to-lava: "Changing obsidian back into lava. Be careful!"
   worlds:
     overworld: "Overworld"
     nether: "Nether"
@@ -497,8 +495,10 @@ commands:
       name-too-long: "&c Too long. Maximum size is [number] characters."
       name-already-exists: "&c There is already an island with that name in this gamemode."
       parameters: "<name>"
+      success: "&a Successfully set your island's name to &b [name]&a ."
     resetname:
       description: "reset your island name"
+      success: "&a Successfully reset your island name."
     team:
       description: "manage your team"
       info:
@@ -869,8 +869,9 @@ protection:
     FLINT_AND_STEEL:
       name: "Flint and steel"
       description: |-
-        &a Allow players to ignite fires using
-        &a flint and steel or fire charges.
+        &a Allow players to ignite fires or
+        &a campfires using flint and steel
+        &a or fire charges.
       hint: "Flint and steel and fire charges disabled"
     FURNACE: 
       description: "Toggle use"
@@ -1004,11 +1005,18 @@ protection:
       hint: "Noteblock interaction disabled"
     OBSIDIAN_SCOOPING:
       name: "Obsidian scooping"
-      description: | 
-        &a Toggle scooping
-        &a Allow obsidian to be scooped up
+      description: |-
+        &a Allow players to scoop up obsidian
         &a with an empty bucket back into lava.
-        &a Protects newbies. Reduces resets.
+
+        &a This helps the newbies that failed to
+        &a build their cobblestone generator.
+
+        &a Note: obsidian cannot be scooped up
+        &a if there are other obsidian blocks
+        &a within a 2-block radius.
+      scooping: "&a Changing obsidian back into lava. Be careful next time!"
+      obsidian-nearby: "&c There are obsidian blocks nearby, you cannot scoop up this block into lava."
     OFFLINE_GROWTH:
       description: |-
         &a When disabled, plants
@@ -1026,9 +1034,10 @@ protection:
       name: "Offline Redstone"
     PISTON_PUSH: 
       description: |-
-          &a Allow pistons to push
+          &a Enable this to prevent
+          &a pistons from pushing
           &a blocks outside island
-      name: "Piston Push"
+      name: "Piston Push Protection"
     PLACE_BLOCKS: 
       description: "Toggle placing"
       name: "Place blocks"
@@ -1057,19 +1066,24 @@ protection:
           &c in the End.
       name: "End PVP"
       hint: "PVP disabled in the End"
+      enabled: "&c The PVP in the End has been enabled."
+      disabled: "&a The PVP in the End has been disabled."
     PVP_NETHER: 
       description: |-
           &c Enable/Disable PVP
           &c in the Nether.
       name: "Nether PVP"
       hint: "PVP disabled in the Nether"
+      enabled: "&c The PVP in the Nether has been enabled."
+      disabled: "&a The PVP in the Nether has been disabled."
     PVP_OVERWORLD: 
       description: |-
           &c Enable/Disable PVP
           &c on island.
       name: "Overworld PVP"
       hint: "&c PVP disabled in the Overworld"
-      active: "&c PVP is active here!"
+      enabled: "&c The PVP in the Overworld has been enabled."
+      disabled: "&a The PVP in the Overworld has been disabled."
     REDSTONE: 
       description: "Toggle use"
       name: "Redstone items"

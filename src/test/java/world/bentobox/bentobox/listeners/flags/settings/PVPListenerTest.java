@@ -525,6 +525,7 @@ public class PVPListenerTest {
         Projectile p = mock(Projectile.class);
         when(p.getShooter()).thenReturn(player);
         when(p.getLocation()).thenReturn(loc);
+        when(p.getWorld()).thenReturn(world);
         EntityDamageByEntityEvent e = new EntityDamageByEntityEvent(p, player2, EntityDamageEvent.DamageCause.ENTITY_ATTACK,
                 new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, 0D)),
                 new EnumMap<DamageModifier, Function<? super Double, Double>>(ImmutableMap.of(DamageModifier.BASE, Functions.constant(-0.0))));

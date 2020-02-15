@@ -24,10 +24,12 @@ import org.bukkit.event.entity.LingeringPotionSplashEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 
+import world.bentobox.bentobox.api.events.flags.FlagSettingChangeEvent;
 import world.bentobox.bentobox.api.flags.Flag;
 import world.bentobox.bentobox.api.flags.FlagListener;
 import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.lists.Flags;
+import world.bentobox.bentobox.managers.RanksManager;
 
 /**
  * Handles PVP
@@ -78,7 +80,7 @@ public class PVPListener extends FlagListener {
         if (damager instanceof Player) {
             User user = User.getInstance(damager);
             if (!checkIsland((Event)e, (Player)damager, damager.getLocation(), flag)) {
-                user.notify(Flags.PVP_OVERWORLD.getHintReference());
+                user.notify(getFlag(damager.getWorld()).getHintReference());
                 e.setCancelled(true);
             }
         } else if (damager instanceof Projectile) {
@@ -103,7 +105,7 @@ public class PVPListener extends FlagListener {
         if (!checkIsland((Event)e, shooter, damager.getLocation(), flag)) {
             damager.setFireTicks(0);
             hurtEntity.setFireTicks(0);
-            user.notify(Flags.PVP_OVERWORLD.getHintReference());
+            user.notify(getFlag(damager.getWorld()).getHintReference());
             e.setCancelled(true);
         }
 
@@ -122,7 +124,7 @@ public class PVPListener extends FlagListener {
                 e.setCancelled(true);
             } else if (!checkIsland(e, e.getPlayer(), e.getCaught().getLocation(), getFlag(e.getCaught().getWorld()))) {
                 e.getHook().remove();
-                User.getInstance(e.getPlayer()).notify(Flags.PVP_OVERWORLD.getHintReference());
+                User.getInstance(e.getPlayer()).notify(getFlag(e.getCaught().getWorld()).getHintReference());
                 e.setCancelled(true);
             }
         }
@@ -144,14 +146,14 @@ public class PVPListener extends FlagListener {
     /**
      * Check if PVP should be blocked or not
      * @param user - user who is initiating the action
-     * @param le - Living entity involed
+     * @param le - Living entity involved
      * @param e - event driving
      * @param flag - flag to check
      * @return true if PVP should be blocked otherwise false
      */
     private boolean blockPVP(User user, LivingEntity le, Event e, Flag flag) {
         // Check for self-inflicted damage
-        if (user.getPlayer().equals(le)) {
+        if (le.equals(user.getPlayer())) {
             return false;
         }
         if (le instanceof Player) {
@@ -162,7 +164,7 @@ public class PVPListener extends FlagListener {
             }
             // Check if PVP is allowed or not
             if (!checkIsland(e, user.getPlayer(), le.getLocation(), flag)) {
-                user.notify(Flags.PVP_OVERWORLD.getHintReference());
+                user.notify(getFlag(le.getWorld()).getHintReference());
                 return true;
             }
         }
@@ -209,6 +211,19 @@ public class PVPListener extends FlagListener {
         // Only care about players shooting fireworks
         if (e.getEntity() instanceof Player && (e.getProjectile() instanceof Firework)) {
             firedFireworks.put(e.getProjectile(), (Player)e.getEntity());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPVPFlagToggle(final FlagSettingChangeEvent e) {
+        Flag flag = e.getEditedFlag();
+        // Only care about PVP Flags
+        if (Flags.PVP_OVERWORLD.equals(flag) || Flags.PVP_NETHER.equals(flag) || Flags.PVP_END.equals(flag)) {
+            String message = "protection.flags." + flag.getID() + "." + (e.isSetTo() ? "enabled" : "disabled");
+            // Send the message to visitors
+            e.getIsland().getVisitors().forEach(visitor -> User.getInstance(visitor).sendMessage(message));
+            // Send the message to island members (and coops and trusted)
+            e.getIsland().getMemberSet(RanksManager.COOP_RANK).forEach(member -> User.getInstance(member).sendMessage(message));
         }
     }
 }
