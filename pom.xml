@@ -69,7 +69,7 @@
         <mongodb.version>3.8.0</mongodb.version>
         <!-- More visible way to change dependency versions -->
         <spigot.version>1.13.2-R0.1-SNAPSHOT</spigot.version>
-        <bstats.version>1.5</bstats.version>
+        <bstats.version>1.7</bstats.version>
         <vault.version>1.7</vault.version>
         <placeholderapi.version>2.10.4</placeholderapi.version>
         <mvdwplaceholderapi.version>master-SNAPSHOT</mvdwplaceholderapi.version>
@@ -81,7 +81,7 @@
         <!-- Do not change unless you want different name for local builds. -->
         <build.number>-1.13.2-LOCAL</build.number>
         <!-- This allows to change between versions. -->
-        <build.version>1.11.1</build.version>
+        <build.version>1.12.0</build.version>
     </properties>
 
     <!-- Profiles will allow to automatically change build version. -->

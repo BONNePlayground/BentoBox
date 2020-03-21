@@ -195,10 +195,8 @@ public class BentoBox extends JavaPlugin {
             flagsManager.registerListeners();
 
             // Load metrics
-            if (settings.isMetrics()) {
-                metrics = new BStats(this);
-                metrics.registerMetrics();
-            }
+             metrics = new BStats(this);
+             metrics.registerMetrics();
 
             // Register Multiverse hook - MV loads AFTER BentoBox
             // Make sure all worlds are already registered to Multiverse.

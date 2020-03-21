@@ -50,6 +50,7 @@ import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.After;
@@ -592,6 +593,45 @@ public class PVPListenerTest {
     }
 
     /**
+     * Test method for {@link PVPListener#onEntityDamage(org.bukkit.event.entity.EntityDamageByEntityEvent)}.
+     */
+    @Test
+    public void testOnEntityDamagePVPAllowedProjectileNullSource() {
+        Projectile p = mock(Projectile.class);
+        when(p.getShooter()).thenReturn(null);
+        when(p.getLocation()).thenReturn(loc);
+        // PVP is allowed
+        when(island.isAllowed(any())).thenReturn(true);
+        EntityDamageByEntityEvent e = new EntityDamageByEntityEvent(p, player2, EntityDamageEvent.DamageCause.ENTITY_ATTACK,
+                new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, 0D)),
+                new EnumMap<DamageModifier, Function<? super Double, Double>>(ImmutableMap.of(DamageModifier.BASE, Functions.constant(-0.0))));
+        new PVPListener().onEntityDamage(e);
+        // PVP should be allowed
+        assertFalse(e.isCancelled());
+        verify(player, never()).sendMessage(Flags.PVP_OVERWORLD.getHintReference());
+    }
+
+    /**
+     * Test method for {@link PVPListener#onEntityDamage(org.bukkit.event.entity.EntityDamageByEntityEvent)}.
+     */
+    @Test
+    public void testOnEntityDamagePVPAllowedProjectileNonEntitySource() {
+        Projectile p = mock(Projectile.class);
+        BlockProjectileSource pSource = mock(BlockProjectileSource.class);
+        when(p.getShooter()).thenReturn(pSource);
+        when(p.getLocation()).thenReturn(loc);
+        // PVP is allowed
+        when(island.isAllowed(any())).thenReturn(true);
+        EntityDamageByEntityEvent e = new EntityDamageByEntityEvent(p, player2, EntityDamageEvent.DamageCause.ENTITY_ATTACK,
+                new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, 0D)),
+                new EnumMap<DamageModifier, Function<? super Double, Double>>(ImmutableMap.of(DamageModifier.BASE, Functions.constant(-0.0))));
+        new PVPListener().onEntityDamage(e);
+        // PVP should be allowed
+        assertFalse(e.isCancelled());
+        verify(player, never()).sendMessage(Flags.PVP_OVERWORLD.getHintReference());
+    }
+
+    /**
      * Test method for {@link PVPListener#onFishing(org.bukkit.event.player.PlayerFishEvent)}.
      */
     @Test
@@ -744,7 +784,9 @@ public class PVPListenerTest {
         map.put(creeper, 10D);
         PotionSplashEvent e = new PotionSplashEvent(tp, map);
         new PVPListener().onSplashPotionSplash(e);
-        assertTrue(e.isCancelled());
+        assertFalse(e.getAffectedEntities().contains(player2));
+        assertTrue(e.getAffectedEntities().contains(zombie));
+        assertTrue(e.getAffectedEntities().contains(creeper));
         verify(notifier).notify(any(), eq(Flags.PVP_OVERWORLD.getHintReference()));
 
         // Wrong world
@@ -799,7 +841,9 @@ public class PVPListenerTest {
         map.put(creeper, 10D);
         PotionSplashEvent e = new PotionSplashEvent(tp, map);
         new PVPListener().onSplashPotionSplash(e);
-        assertFalse(e.isCancelled());
+        assertTrue(e.getAffectedEntities().contains(player2));
+        assertTrue(e.getAffectedEntities().contains(zombie));
+        assertTrue(e.getAffectedEntities().contains(creeper));
         verify(player, never()).sendMessage(Flags.PVP_OVERWORLD.getHintReference());
     }
 
@@ -827,7 +871,9 @@ public class PVPListenerTest {
         when(iwm.getIvSettings(any())).thenReturn(Collections.singletonList("ENTITY_ATTACK"));
         new PVPListener().onSplashPotionSplash(e);
         // visitor should be protected
-        assertTrue(e.isCancelled());
+        assertFalse(e.getAffectedEntities().contains(player2));
+        assertTrue(e.getAffectedEntities().contains(zombie));
+        assertTrue(e.getAffectedEntities().contains(creeper));
         verify(notifier).notify(any(), eq(Flags.INVINCIBLE_VISITORS.getHintReference()));
 
         // Wrong world

@@ -83,13 +83,11 @@ public class PVPListener extends FlagListener {
                 user.notify(getFlag(damager.getWorld()).getHintReference());
                 e.setCancelled(true);
             }
-        } else if (damager instanceof Projectile) {
+        } else if (damager instanceof Projectile && ((Projectile)damager).getShooter() instanceof Player) {
             // Find out who fired the arrow
             Projectile p = (Projectile) damager;
-            Entity shooter =(Entity)p.getShooter();
-            if (shooter instanceof Player) {
-                processDamage(e, damager, (Player)shooter, hurtEntity, flag);
-            }
+            Player shooter =(Player)p.getShooter();
+            processDamage(e, damager, shooter, hurtEntity, flag);
         } else if (damager instanceof Firework && firedFireworks.containsKey(damager)) {
             Player shooter = firedFireworks.get(damager);
             processDamage(e, damager, shooter, hurtEntity, flag);
@@ -138,8 +136,12 @@ public class PVPListener extends FlagListener {
     public void onSplashPotionSplash(final PotionSplashEvent e) {
         if (e.getEntity().getShooter() instanceof Player && getPlugin().getIWM().inWorld(e.getEntity().getWorld())) {
             User user = User.getInstance((Player)e.getEntity().getShooter());
-            // Run through affected entities and cancel the splash if any are a protected player
-            e.setCancelled(e.getAffectedEntities().stream().anyMatch(le -> blockPVP(user, le, e, getFlag(e.getEntity().getWorld()))));
+            // Run through affected entities and cancel the splash for protected players
+            for (LivingEntity le : e.getAffectedEntities()) {
+                if (!le.getUniqueId().equals(user.getUniqueId()) && blockPVP(user, le, e, getFlag(e.getEntity().getWorld()))) {
+                    e.setIntensity(le, 0);
+                }
+            }
         }
     }
 

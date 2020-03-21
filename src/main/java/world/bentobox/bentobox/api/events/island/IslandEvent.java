@@ -87,6 +87,13 @@ public class IslandEvent extends IslandBaseEvent {
          */
         LOCK,
         /**
+         * Called before an island is going to be cleared of island members.
+         * This event occurs before resets or other island clearing activities.
+         * Cannot be cancelled.
+         * @since 1.12.0
+         */
+        PRECLEAR,
+        /**
          * Called when a player has been reset and a new island spot allocated
          * but before the island itself has been pasted or the player teleported.
          */
@@ -293,6 +300,16 @@ public class IslandEvent extends IslandBaseEvent {
     }
 
     /**
+     * Fired when an island is reserved for a player
+     * @since 1.12.0
+     */
+    public static class IslandReservedEvent extends IslandBaseEvent {
+        private IslandReservedEvent(Island island, UUID player, boolean admin, Location location) {
+            super(island, player, admin, location);
+        }
+    }
+
+    /**
      * Fired when an a player enters an island.
      * Cancellation has no effect.
      */
@@ -332,17 +349,52 @@ public class IslandEvent extends IslandBaseEvent {
             super(island, player, admin, location);
         }
     }
+
+    /**
+     * Fired before an island has its player data cleared, e.g., just before a reset
+     * @since 1.12.0
+     */
+    public static class IslandPreclearEvent extends IslandBaseEvent {
+        private final @NonNull Island oldIsland;
+
+        private IslandPreclearEvent(Island island, UUID player, boolean admin, Location location, @NonNull Island oldIsland) {
+            // Final variables have to be declared in the constructor
+            super(island, player, admin, location);
+            // Create a copy of the old island
+            this.oldIsland = new Island(oldIsland);
+        }
+
+        /**
+         * @since 1.12.0
+         */
+        @NonNull
+        public Island getOldIsland() {
+            return oldIsland;
+        }
+    }
+
     /**
      * Fired when an island is going to be reset.
      * May be cancelled.
      */
     public static class IslandResetEvent extends IslandBaseEvent {
+        private final @NonNull Island oldIsland;
         private @NonNull BlueprintBundle blueprintBundle;
 
-        private IslandResetEvent(Island island, UUID player, boolean admin, Location location, @NonNull BlueprintBundle blueprintBundle) {
+        private IslandResetEvent(Island island, UUID player, boolean admin, Location location, @NonNull BlueprintBundle blueprintBundle, @NonNull Island oldIsland) {
             // Final variables have to be declared in the constructor
             super(island, player, admin, location);
             this.blueprintBundle = blueprintBundle;
+            // Create a copy of the old island
+            this.oldIsland = new Island(oldIsland);
+        }
+
+        /**
+         * @since 1.12.0
+         */
+        @NonNull
+        public Island getOldIsland() {
+            return oldIsland;
         }
 
         /**
@@ -365,9 +417,21 @@ public class IslandEvent extends IslandBaseEvent {
      *
      */
     public static class IslandResettedEvent extends IslandBaseEvent {
-        private IslandResettedEvent(Island island, UUID player, boolean admin, Location location) {
+        private final @NonNull Island oldIsland;
+
+        private IslandResettedEvent(Island island, UUID player, boolean admin, Location location, Island oldIsland) {
             // Final variables have to be declared in the constructor
             super(island, player, admin, location);
+            // Create a copy of the old island
+            this.oldIsland = new Island(oldIsland);
+        }
+
+        /**
+         * @since 1.12.0
+         */
+        @NonNull
+        public Island getOldIsland() {
+            return oldIsland;
         }
     }
     /**
@@ -472,8 +536,24 @@ public class IslandEvent extends IslandBaseEvent {
          */
         private int oldRange;
 
+        /**
+         * Stores old island object
+         * @since 1.12.0
+         */
+        private Island oldIsland;
+
         public IslandEventBuilder island(Island island) {
             this.island = island;
+            return this;
+        }
+
+        /**
+         * @param oldIsland old island object
+         * @return IslandEventBuilder
+         * @since 1.12.0
+         */
+        public IslandEventBuilder oldIsland(Island oldIsland) {
+            this.oldIsland = oldIsland;
             return this;
         }
 
@@ -585,11 +665,11 @@ public class IslandEvent extends IslandBaseEvent {
                 Bukkit.getPluginManager().callEvent(lock);
                 return lock;
             case RESET:
-                IslandResetEvent reset = new IslandResetEvent(island, player, admin, location, blueprintBundle);
+                IslandResetEvent reset = new IslandResetEvent(island, player, admin, location, blueprintBundle, oldIsland);
                 Bukkit.getPluginManager().callEvent(reset);
                 return reset;
             case RESETTED:
-                IslandResettedEvent resetted = new IslandResettedEvent(island, player, admin, location);
+                IslandResettedEvent resetted = new IslandResettedEvent(island, player, admin, location, oldIsland);
                 Bukkit.getPluginManager().callEvent(resetted);
                 return resetted;
             case UNBAN:
@@ -610,9 +690,17 @@ public class IslandEvent extends IslandBaseEvent {
                 return unreg;
             case RANGE_CHANGE:
                 IslandProtectionRangeChangeEvent
-					change = new IslandProtectionRangeChangeEvent(island, player, admin, location, newRange, oldRange);
+                change = new IslandProtectionRangeChangeEvent(island, player, admin, location, newRange, oldRange);
                 Bukkit.getPluginManager().callEvent(change);
                 return change;
+            case PRECLEAR:
+                IslandPreclearEvent preclear = new IslandPreclearEvent(island, player, admin, location, oldIsland);
+                Bukkit.getPluginManager().callEvent(preclear);
+                return preclear;
+            case RESERVED:
+                IslandReservedEvent res = new IslandReservedEvent(island, player, admin, location);
+                Bukkit.getPluginManager().callEvent(res);
+                return res;
             default:
                 IslandGeneralEvent general = new IslandGeneralEvent(island, player, admin, location);
                 Bukkit.getPluginManager().callEvent(general);

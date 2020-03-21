@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -171,6 +172,11 @@ public class IslandResetCommandTest {
             members.add(temp);
         }
         when(island.getMemberSet()).thenReturn(members.build());
+        Location location = mock(Location.class);
+        when(location.clone()).thenReturn(location);
+        when(island.getCenter()).thenReturn(location);
+        when(island.getHistory()).thenReturn(Collections.emptyList());
+        when(island.getSpawnPoint()).thenReturn(Collections.emptyMap());
 
         // Addon
         GameModeAddon addon1 = mock(GameModeAddon.class);
@@ -251,7 +257,7 @@ public class IslandResetCommandTest {
         // TODO Verify that panel was shown
         // verify(bpm).showPanel(any(), eq(user), eq(irc.getLabel()));
         // Verify event
-        verify(pim, times(12)).callEvent(any(IslandBaseEvent.class));
+        verify(pim, times(14)).callEvent(any(IslandBaseEvent.class));
         // Verify messaging
         verify(user).sendMessage("commands.island.create.creating-island");
         verify(user, never()).sendMessage(eq("commands.island.reset.kicked-from-island"), eq("[gamemode]"), anyString());
@@ -440,7 +446,7 @@ public class IslandResetCommandTest {
         assertTrue(irc.execute(user, irc.getLabel(), Collections.singletonList("custom")));
         verify(user).sendMessage("commands.island.create.creating-island");
         // Verify event
-        verify(pim, times(12)).callEvent(any(IslandBaseEvent.class));
+        verify(pim, times(14)).callEvent(any(IslandBaseEvent.class));
 
     }
 }
