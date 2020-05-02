@@ -97,6 +97,12 @@ public class Settings implements ConfigObject {
     @ConfigEntry(path = "general.database.use-ssl", since = "1.12.0")
     private boolean useSSL = false;
 
+    @ConfigComment("Database table prefix character. Adds a prefix to the database tables. Not used by flatfile databases.")
+    @ConfigComment("Only the characters A-Z, a-z, 0-9 can be used. Invalid characters will become an underscore.")
+    @ConfigComment("Set this to a unique value if you are running multiple BentoBox instances that share a database.")
+    @ConfigEntry(path = "general.database.prefix-character", since = "1.13.0")
+    private String databasePrefix = "";
+
     @ConfigComment("Allow FTB Autonomous Activator to work (will allow a pseudo player [CoFH] to place and break blocks and hang items)")
     @ConfigComment("Add other fake player names here if required")
     @ConfigEntry(path = "general.fakeplayers", experimental = true)
@@ -225,6 +231,18 @@ public class Settings implements ConfigObject {
     @ConfigComment("who's been member of the island the longest time.")
     @ConfigEntry(path = "island.automated-ownership-transfer.ignore-ranks", hidden = true)
     private boolean autoOwnershipTransferIgnoreRanks = false;
+
+    // Island deletion related settings
+	@ConfigComment("Toggles whether islands, when players are resetting them, should be kept in the world or deleted.")
+	@ConfigComment("* If set to 'true', whenever a player resets his island, his previous island will become unowned and won't be deleted from the world.")
+	@ConfigComment("  You can, however, still delete those unowned islands through purging.")
+	@ConfigComment("  On bigger servers, this can lead to an increasing world size.")
+	@ConfigComment("  Yet, this allows admins to retrieve a player's old island in case of an improper use of the reset command.")
+	@ConfigComment("  Admins can indeed re-add the player to his old island by registering him to it.")
+	@ConfigComment("* If set to 'false', whenever a player resets his island, his previous island will be deleted from the world.")
+	@ConfigComment("  This is the default behaviour.")
+	@ConfigEntry(path = "island.deletion.keep-previous-island-on-reset", since = "1.13.0")
+	private boolean keepPreviousIslandOnReset = false;
 
     /* WEB */
     @ConfigComment("Toggle whether BentoBox can connect to GitHub to get data about updates and addons.")
@@ -610,4 +628,37 @@ public class Settings implements ConfigObject {
     public void setInviteConfirmation(boolean inviteConfirmation) {
         this.inviteConfirmation = inviteConfirmation;
     }
+
+    /**
+     * @return the databasePrefix
+     */
+    public String getDatabasePrefix() {
+        if (databasePrefix == null) databasePrefix = "";
+        return databasePrefix.isEmpty() ? "" : databasePrefix.replaceAll("[^a-zA-Z0-9]", "_").substring(0,1);
+    }
+
+    /**
+     * @param databasePrefix the databasePrefix to set
+     */
+    public void setDatabasePrefix(String databasePrefix) {
+        this.databasePrefix = databasePrefix;
+    }
+
+	/**
+	 * Returns whether islands, when reset, should be kept or deleted.
+	 * @return {@code true} if islands, when reset, should be kept; {@code false} otherwise.
+	 * @since 1.13.0
+	 */
+	public boolean isKeepPreviousIslandOnReset() {
+		return keepPreviousIslandOnReset;
+	}
+
+	/**
+	 * Sets whether islands, when reset, should be kept or deleted.
+	 * @param keepPreviousIslandOnReset {@code true} if islands, when reset, should be kept; {@code false} otherwise.
+	 * @since 1.13.0
+	 */
+	public void setKeepPreviousIslandOnReset(boolean keepPreviousIslandOnReset) {
+		this.keepPreviousIslandOnReset = keepPreviousIslandOnReset;
+	}
 }

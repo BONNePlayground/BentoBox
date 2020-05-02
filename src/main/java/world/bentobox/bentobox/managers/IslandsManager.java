@@ -23,8 +23,6 @@ import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -212,47 +210,76 @@ public class IslandsManager {
      * @return true if safe, otherwise false
      */
     public boolean isSafeLocation(@NonNull Location l) {
-        if (l.getWorld() == null) {
-            return false;
-        }
         Block ground = l.getBlock().getRelative(BlockFace.DOWN);
         Block space1 = l.getBlock();
         Block space2 = l.getBlock().getRelative(BlockFace.UP);
+        return checkIfSafe(l.getWorld(), ground.getType(), space1.getType(), space2.getType());
+    }
 
-        // Ground must be solid
-        if (!ground.getType().isSolid()) {
+    /**
+     * Check if a location is safe for teleporting
+     * @param world - world
+     * @param material -
+     * @param material2
+     * @param material3
+     * @return
+     */
+    public boolean checkIfSafe(@Nullable World world, @NonNull Material ground, @NonNull Material space1, @NonNull Material space2) {
+        // Ground must be solid, space 1 and 2 must not be solid
+        if (world == null || !ground.isSolid()
+                || (space1.isSolid() && !space1.name().contains("SIGN"))
+                || (space2.isSolid() && !space2.name().contains("SIGN"))) {
             return false;
         }
         // Cannot be submerged or water cannot be dangerous
-        if (space1.isLiquid() && (space2.isLiquid() || plugin.getIWM().isWaterNotSafe(l.getWorld()))) {
+        if (space1.equals(Material.WATER) && (space2.equals(Material.WATER) || plugin.getIWM().isWaterNotSafe(world))) {
             return false;
         }
-
-        // Portals are not "safe"
-        if (space1.getType() == Material.NETHER_PORTAL || ground.getType() == Material.NETHER_PORTAL || space2.getType() == Material.NETHER_PORTAL
-                || space1.getType() == Material.END_PORTAL || ground.getType() == Material.END_PORTAL || space2.getType() == Material.END_PORTAL) {
+        // Lava
+        if (ground.equals(Material.LAVA)
+                || space1.equals(Material.LAVA)
+                || space2.equals(Material.LAVA)) {
             return false;
         }
-        if (ground.getType().equals(Material.LAVA)
-                || space1.getType().equals(Material.LAVA)
-                || space2.getType().equals(Material.LAVA)) {
+        // Unsafe types
+        if (((space1.equals(Material.AIR) && space2.equals(Material.AIR))
+                || (space1.equals(Material.NETHER_PORTAL) && space2.equals(Material.NETHER_PORTAL)))
+                && (ground.name().contains("FENCE")
+                        || ground.name().contains("DOOR")
+                        || ground.name().contains("GATE")
+                        || ground.name().contains("PLATE")
+                        || ground.name().contains("SIGN")
+                        || ground.name().contains("BANNER")
+                        || ground.name().contains("BUTTON")
+                        || ground.name().contains("BOAT"))) {
             return false;
         }
-
-        // Check for trapdoors
-        BlockData bd = ground.getBlockData();
-        if (bd instanceof Openable) {
-            return !((Openable)bd).isOpen();
-        }
-
-        if (ground.getType().equals(Material.CACTUS) || ground.getType().toString().contains("BOAT") || ground.getType().toString().contains("FENCE")
-                || ground.getType().toString().contains("SIGN")) {
+        // Known unsafe blocks
+        switch (ground) {
+        // Unsafe
+        case ANVIL:
+        case BARRIER:
+        case CACTUS:
+        case END_PORTAL:
+        case END_ROD:
+        case FIRE:
+        case FLOWER_POT:
+        case LADDER:
+        case LEVER:
+        case TALL_GRASS:
+        case PISTON_HEAD:
+        case MOVING_PISTON:
+        case TORCH:
+        case WALL_TORCH:
+        case TRIPWIRE:
+        case WATER:
+        case COBWEB:
+        case NETHER_PORTAL:
+        case MAGMA_BLOCK:
             return false;
+        default:
+            return true;
         }
-        // Check that the space is not solid
-        // The isSolid function is not fully accurate (yet) so we have to check a few other items
-        // isSolid thinks that PLATEs and SIGNS are solid, but they are not
-        return (!space1.getType().isSolid() || space1.getType().toString().contains("SIGN")) && (!space2.getType().isSolid() || space2.getType().toString().contains("SIGN"));
     }
 
     /**
@@ -313,7 +340,7 @@ public class IslandsManager {
             // Set the delete flag which will prevent it from being loaded even if database deletion fails
             island.setDeleted(true);
             // Save the island
-            handler.saveObject(island);
+            handler.saveObjectAsync(island);
             // Delete the island
             handler.deleteObject(island);
             // Remove players from island
@@ -467,12 +494,17 @@ public class IslandsManager {
      * Determines a safe teleport spot on player's island or the team island
      * they belong to.
      *
-     * @param world - world to check
-     * @param user - the player
-     * @param number - a number - starting home location e.g., 1
-     * @return Location of a safe teleport spot or null if one cannot be found
+     * @param world - world to check, not null
+     * @param user - the player, not null
+     * @param number - a number - starting home location, e.g. 1
+     * @return Location of a safe teleport spot or {@code null} if one cannot be found or if the world is not an island world.
      */
     public Location getSafeHomeLocation(@NonNull World world, @NonNull User user, int number) {
+        // Check if the world is a gamemode world
+        if (!plugin.getIWM().inWorld(world)) {
+            return null;
+        }
+
         // Try the numbered home location first
         Location l = plugin.getPlayers().getHomeLocation(world, user, number);
 
@@ -670,7 +702,10 @@ public class IslandsManager {
             plugin.getPlayers().setHomeLocation(player.getUniqueId(), home);
         }
         user.sendMessage("commands.island.go.teleport");
-        PaperLib.teleportAsync(player, home).thenAccept(b -> teleported(world, user, number, newIsland));
+        PaperLib.teleportAsync(player, home).thenAccept(b -> {
+            // Only run the commands if the player is successfully teleported
+            if (b) teleported(world, user, number, newIsland);
+        });
     }
 
     private void teleported(World world, User user, int number, boolean newIsland) {
@@ -865,7 +900,7 @@ public class IslandsManager {
             plugin.logError(toQuarantine.size() + " islands could not be loaded successfully; moving to trash bin.");
             plugin.logError(unowned + " are unowned, " + owned + " are owned.");
 
-            toQuarantine.forEach(handler::saveObject);
+            toQuarantine.forEach(handler::saveObjectAsync);
             // Check if there are any islands with duplicate islands
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 Set<UUID> duplicatedUUIDRemovedSet = new HashSet<>();
@@ -969,7 +1004,7 @@ public class IslandsManager {
     public void removePlayer(World world, UUID uuid) {
         Island island = islandCache.removePlayer(world, uuid);
         if (island != null) {
-            handler.saveObject(island);
+            handler.saveObjectAsync(island);
         }
     }
 
@@ -1002,7 +1037,7 @@ public class IslandsManager {
         Collection<Island> collection = islandCache.getIslands();
         for(Island island : collection){
             try {
-                handler.saveObject(island);
+                handler.saveObjectAsync(island);
             } catch (Exception e) {
                 plugin.logError("Could not save island to database when running sync! " + e.getMessage());
             }
@@ -1037,7 +1072,7 @@ public class IslandsManager {
         teamIsland.addMember(playerUUID);
         islandCache.addPlayer(playerUUID, teamIsland);
         // Save the island
-        handler.saveObject(teamIsland);
+        handler.saveObjectAsync(teamIsland);
     }
 
     public void setLast(Location last) {
@@ -1163,7 +1198,7 @@ public class IslandsManager {
      * @param island - island
      */
     public void save(Island island) {
-        handler.saveObject(island);
+        handler.saveObjectAsync(island);
     }
 
     /**
@@ -1255,10 +1290,9 @@ public class IslandsManager {
             // Put old island into trash
             quarantineCache.computeIfAbsent(target, k -> new ArrayList<>()).add(oldIsland);
             // Save old island
-            if (!handler.saveObject(oldIsland)) {
-                plugin.logError("Could not save trashed island in database");
-                return false;
-            }
+            handler.saveObjectAsync(oldIsland).thenAccept(result -> {
+                if (!result)  plugin.logError("Could not save trashed island in database");
+            });
         }
         // Restore island from trash
         island.setDoNotLoad(false);
@@ -1268,10 +1302,9 @@ public class IslandsManager {
             return false;
         }
         // Save new island
-        if (!handler.saveObject(island)) {
-            plugin.logError("Could not save recovered island to database");
-            return false;
-        }
+        handler.saveObjectAsync(island).thenAccept(result -> {
+            if (!result)  plugin.logError("Could not save recovered island to database");
+        });
         return true;
     }
 
