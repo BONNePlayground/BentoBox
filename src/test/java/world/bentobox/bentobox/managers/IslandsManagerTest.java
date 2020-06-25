@@ -258,7 +258,8 @@ public class IslandsManagerTest {
         whitelist.add(EntityType.ENDERMAN);
         whitelist.add(EntityType.WITHER);
         whitelist.add(EntityType.ZOMBIE_VILLAGER);
-        whitelist.add(EntityType.PIG_ZOMBIE);
+        // new entity
+        whitelist.add(EntityType.ZOMBIFIED_PIGLIN);
         when(iwm.getRemoveMobsWhitelist(any())).thenReturn(whitelist);
 
 
