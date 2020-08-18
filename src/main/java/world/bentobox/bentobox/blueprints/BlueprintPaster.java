@@ -5,10 +5,12 @@ import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -93,12 +95,6 @@ public class BlueprintPaster {
     private Location location;
 
     /**
-     * Task to run after pasting, null if none.
-     */
-    @Nullable
-    private Runnable afterPasteTask;
-
-    /**
      * Island related to this paste, may be null.
      */
     @Nullable
@@ -109,15 +105,13 @@ public class BlueprintPaster {
      * @param plugin - BentoBox
      * @param clipboard - clipboard to paste
      * @param location - location to paste to
-     * @param task - task to run after pasting, null if none
      */
-    public BlueprintPaster(@NonNull BentoBox plugin, @NonNull BlueprintClipboard clipboard, @NonNull Location location, @Nullable Runnable task) {
+    public BlueprintPaster(@NonNull BentoBox plugin, @NonNull BlueprintClipboard clipboard, @NonNull Location location) {
         this.plugin = plugin;
         this.clipboard = clipboard;
         // Calculate location for pasting
         this.blueprint = clipboard.getBlueprint();
         this.location = location;
-        this.afterPasteTask = task;
         this.island = null;
 
         // Paste
@@ -130,26 +124,22 @@ public class BlueprintPaster {
      * @param bp - blueprint to paste
      * @param world - world to paste to
      * @param island - island related to this paste
-     * @param task - task to run after pasting
      */
-    public BlueprintPaster(@NonNull BentoBox plugin, @NonNull Blueprint bp, World world, @NonNull Island island, @Nullable Runnable task) {
+    public BlueprintPaster(@NonNull BentoBox plugin, @NonNull Blueprint bp, World world, @NonNull Island island) {
         this.plugin = plugin;
         this.blueprint = bp;
-        this.afterPasteTask = task;
         this.island = island;
         // Offset due to bedrock
         Vector off = bp.getBedrock() != null ? bp.getBedrock() : new Vector(0,0,0);
         // Calculate location for pasting
         this.location = island.getCenter().toVector().subtract(off).toLocation(world);
-
-        // Paste
-        paste();
     }
 
     /**
      * The main pasting method
      */
-    private void paste() {
+    public CompletableFuture<Boolean> paste() {
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
         // Iterators for the various maps to paste
         Map<Vector, BlueprintBlock> blocks = blueprint.getBlocks() == null ? Collections.emptyMap() : blueprint.getBlocks();
         Map<Vector, BlueprintBlock> attached = blueprint.getAttached() == null ? Collections.emptyMap() : blueprint.getAttached();
@@ -226,16 +216,16 @@ public class BlueprintPaster {
                     clipboard.setPos1(pos1);
                     clipboard.setPos2(pos2);
                 }
-                if (afterPasteTask != null) {
-                    // Run follow-on task if it exists
-                    Bukkit.getScheduler().runTask(plugin, afterPasteTask);
-                }
+                result.complete(true);
                 pasteState = PasteState.CANCEL;
             } else if (pasteState.equals(PasteState.CANCEL)) {
                 // This state makes sure the follow-on task only ever runs once
                 pastingTask.cancel();
+                result.complete(true);
             }
         }, 0L, 1L);
+
+        return result;
     }
 
     private void pasteBlock(Location location, Entry<Vector, BlueprintBlock> entry) {
@@ -347,6 +337,9 @@ public class BlueprintPaster {
                         // Parse any placeholders in the entity's name, if the owner's connected (he should)
                         Player owner = User.getInstance(island.getOwner()).getPlayer();
                         if (owner != null) {
+                            // Parse for the player's name first (in case placeholders might need it)
+                            customName = customName.replace(TextVariables.NAME, owner.getName());
+                            // Now parse the placeholders
                             customName = plugin.getPlaceholdersManager().replacePlaceholders(owner, customName);
                         }
                     }
@@ -418,7 +411,7 @@ public class BlueprintPaster {
         // Sign text must be stored under the addon's name.sign.line0,1,2,3 in the yaml file
         if (island != null && !lines.isEmpty() && lines.get(0).equalsIgnoreCase(TextVariables.START_TEXT)) {
             // Get the addon that is operating in this world
-            String addonName = plugin.getIWM().getAddon(island.getWorld()).map(addon -> addon.getDescription().getName().toLowerCase()).orElse("");
+            String addonName = plugin.getIWM().getAddon(island.getWorld()).map(addon -> addon.getDescription().getName().toLowerCase(Locale.ENGLISH)).orElse("");
             for (int i = 0; i < 4; i++) {
                 s.setLine(i, ChatColor.translateAlternateColorCodes('&', plugin.getLocalesManager().getOrDefault(User.getInstance(island.getOwner()),
                         addonName + ".sign.line" + i,"").replace(TextVariables.NAME, name)));

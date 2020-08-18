@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -93,12 +94,33 @@ public class BlockInteractionListener extends FlagListener {
             checkIsland(e, player, loc, Flags.CONTAINER);
             return;
         }
-        switch (type) {
-        case ANVIL:
-        case CHIPPED_ANVIL:
-        case DAMAGED_ANVIL:
+        if (Tag.ANVIL.isTagged(type)) {
             checkIsland(e, player, loc, Flags.ANVIL);
-            break;
+            return;
+        }
+        if (Tag.BUTTONS.isTagged(type)) {
+            checkIsland(e, player, loc, Flags.BUTTON);
+            return;
+        }
+//        if (Tag.BEDS.isTagged(type)) {
+//            checkIsland(e, player, loc, Flags.BED);
+//            return;
+//        }
+        if (Tag.DOORS.isTagged(type)) {
+            checkIsland(e, player, loc, Flags.DOOR);
+            return;
+        }
+//        if (Tag.SHULKER_BOXES.isTagged(type)) {
+//            checkIsland(e, player, loc, Flags.CONTAINER);
+//            return;
+//        }
+
+        if (Tag.TRAPDOORS.isTagged(type)) {
+            checkIsland(e, player, loc, Flags.TRAPDOOR);
+            return;
+        }
+
+        switch (type) {
         case BEACON:
             checkIsland(e, player, loc, Flags.BEACON);
             break;
@@ -161,32 +183,6 @@ public class BlockInteractionListener extends FlagListener {
         case HOPPER_MINECART:
             checkIsland(e, player, loc, Flags.HOPPER);
             break;
-        case ACACIA_DOOR:
-        case BIRCH_DOOR:
-        case DARK_OAK_DOOR:
-        case IRON_DOOR:
-        case JUNGLE_DOOR:
-        case SPRUCE_DOOR:
-        case OAK_DOOR:
-            checkIsland(e, player, loc, Flags.DOOR);
-            break;
-        case ACACIA_TRAPDOOR:
-        case BIRCH_TRAPDOOR:
-        case DARK_OAK_TRAPDOOR:
-        case OAK_TRAPDOOR:
-        case JUNGLE_TRAPDOOR:
-        case SPRUCE_TRAPDOOR:
-        case IRON_TRAPDOOR:
-            checkIsland(e, player, loc, Flags.TRAPDOOR);
-            break;
-        case ACACIA_FENCE_GATE:
-        case BIRCH_FENCE_GATE:
-        case DARK_OAK_FENCE_GATE:
-        case OAK_FENCE_GATE:
-        case JUNGLE_FENCE_GATE:
-        case SPRUCE_FENCE_GATE:
-            checkIsland(e, player, loc, Flags.GATE);
-            break;
 //        case BLAST_FURNACE:
 //        case CAMPFIRE:
         case FURNACE_MINECART:
@@ -213,18 +209,10 @@ public class BlockInteractionListener extends FlagListener {
 //        case LOOM:
             checkIsland(e, player, loc, Flags.CRAFTING);
             break;
-        case STONE_BUTTON:
-        case ACACIA_BUTTON:
-        case BIRCH_BUTTON:
-        case DARK_OAK_BUTTON:
-        case JUNGLE_BUTTON:
-        case OAK_BUTTON:
-        case SPRUCE_BUTTON:
-            checkIsland(e, player, loc, Flags.BUTTON);
-            break;
         case LEVER:
             checkIsland(e, player, loc, Flags.LEVER);
             break;
+        case REDSTONE_WIRE:
         case REPEATER:
         case COMPARATOR:
         case DAYLIGHT_DETECTOR:
@@ -244,6 +232,16 @@ public class BlockInteractionListener extends FlagListener {
 //            break;
         case CAKE:
             checkIsland(e, player, loc, Flags.CAKE);
+            break;
+        case OAK_FENCE_GATE:
+        case SPRUCE_FENCE_GATE:
+        case BIRCH_FENCE_GATE:
+        case JUNGLE_FENCE_GATE:
+        case DARK_OAK_FENCE_GATE:
+        case ACACIA_FENCE_GATE:
+//        case CRIMSON_FENCE_GATE:
+//        case WARPED_FENCE_GATE:
+            checkIsland(e, player, loc, Flags.GATE);
             break;
         default:
             if (stringFlags.containsKey(type.name())) {

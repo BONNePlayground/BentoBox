@@ -29,6 +29,7 @@ import world.bentobox.bentobox.api.user.User;
 public class TabbedPanel extends Panel implements PanelListener {
 
     private static final String PROTECTION_PANEL = "protection.panel.";
+    private static final long ITEMS_PER_PAGE = 36;
     private final TabbedPanelBuilder tpb;
     private @NonNull BentoBox plugin = BentoBox.getInstance();
     private int activeTab;
@@ -94,19 +95,23 @@ public class TabbedPanel extends Panel implements PanelListener {
         // Show the active tab
         if (tpb.getTabs().containsKey(activeTab)) {
             List<PanelItem> panelItems = tab.getPanelItems();
-            panelItems.stream().filter(Objects::nonNull).skip(page * 43L).limit(page * 43L + 43L).forEach(i -> items.put(items.lastKey() + 1, i));
+            // Adds the flag items
+            panelItems.stream().filter(Objects::nonNull).skip(page * ITEMS_PER_PAGE).limit(page * ITEMS_PER_PAGE + ITEMS_PER_PAGE).forEach(i -> items.put(items.lastKey() + 1, i));
+
+            // set up the footer
+            setupFooter(items);
             // Add forward and backward icons
             if (page > 0) {
                 // Previous page icon
-                items.put(items.lastKey() + 1, new PanelItemBuilder().icon(Material.ARROW).name(tpb.getUser().getTranslation(PROTECTION_PANEL + "previous")).clickHandler((panel, user1, clickType, slot1) -> {
+                items.put(46, new PanelItemBuilder().icon(Material.ARROW).name(tpb.getUser().getTranslation(PROTECTION_PANEL + "previous")).clickHandler((panel, user1, clickType, slot1) -> {
                     this.activePage--;
                     this.refreshPanel();
                     return true;
                 }).build());
             }
-            if ((page + 1) * 43L < panelItems.stream().filter(Objects::nonNull).count()) {
+            if ((page + 1) * ITEMS_PER_PAGE < panelItems.stream().filter(Objects::nonNull).count()) {
                 // Next page icon
-                items.put(items.lastKey() + 1, new PanelItemBuilder().icon(Material.ARROW).name(tpb.getUser().getTranslation(PROTECTION_PANEL + "next")).clickHandler((panel, user1, clickType, slot1) -> {
+                items.put(52, new PanelItemBuilder().icon(Material.ARROW).name(tpb.getUser().getTranslation(PROTECTION_PANEL + "next")).clickHandler((panel, user1, clickType, slot1) -> {
                     this.activePage++;
                     this.refreshPanel();
                     return true;
@@ -127,14 +132,12 @@ public class TabbedPanel extends Panel implements PanelListener {
     private void setupHeader(Tab tab, TreeMap<Integer, PanelItem> items) {
         // Set up top
         for (int i = 0; i < 9; i++) {
-            items.put(i, new PanelItemBuilder().icon(Material.LIGHT_BLUE_STAINED_GLASS_PANE).name("").build());
+            items.put(i, new PanelItemBuilder().icon(plugin.getSettings().getPanelFillerMaterial()).name(" ").build());
         }
         // Add icons
         for (Entry<Integer, Tab> tabPanel : tpb.getTabs().entrySet()) {
             // Add the icon to the top row
-            if (tabPanel.getValue().getPermission().isEmpty()
-                    || tpb.getUser().hasPermission(tabPanel.getValue().getPermission())
-                    || tpb.getUser().isOp()) {
+            if (tpb.getUser().hasPermission(tabPanel.getValue().getPermission())) {
                 PanelItem activeIcon = tabPanel.getValue().getIcon();
                 // Set the glow of the active tab
                 activeIcon.setGlow(tabPanel.getValue().equals(tab));
@@ -143,7 +146,12 @@ public class TabbedPanel extends Panel implements PanelListener {
         }
         // Add any subsidiary icons
         tab.getTabIcons().forEach(items::put);
+    }
 
+    private void setupFooter(TreeMap<Integer, PanelItem> items) {
+        for (int i = 45; i < 54; i++) {
+            items.put(i, new PanelItemBuilder().icon(plugin.getSettings().getPanelFillerMaterial()).name(" ").build());
+        }
     }
 
     @Override
@@ -198,5 +206,4 @@ public class TabbedPanel extends Panel implements PanelListener {
     public void setActiveTab(int activeTab) {
         this.activeTab = activeTab;
     }
-
 }

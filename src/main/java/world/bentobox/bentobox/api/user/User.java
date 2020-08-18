@@ -18,6 +18,7 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
@@ -348,7 +349,7 @@ public class User {
     public String getTranslation(World world, String reference, String... variables) {
         // Get translation.
         String addonPrefix = plugin.getIWM()
-                .getAddon(world).map(a -> a.getDescription().getName().toLowerCase() + ".").orElse("");
+                .getAddon(world).map(a -> a.getDescription().getName().toLowerCase(Locale.ENGLISH) + ".").orElse("");
         return translate(addonPrefix, reference, variables);
     }
 
@@ -362,7 +363,7 @@ public class User {
      */
     public String getTranslation(String reference, String... variables) {
         // Get addonPrefix
-        String addonPrefix = addon == null ? "" : addon.getDescription().getName().toLowerCase() + ".";
+        String addonPrefix = addon == null ? "" : addon.getDescription().getName().toLowerCase(Locale.ENGLISH) + ".";
         return translate(addonPrefix, reference, variables);
     }
 
@@ -532,7 +533,15 @@ public class User {
      * @return true if the command was successful, otherwise false
      */
     public boolean performCommand(String command) {
-        return player.performCommand(command);
+        PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(getPlayer(), command);
+        Bukkit.getPluginManager().callEvent(event);
+
+        // only perform the command, if the event wasn't cancelled by an other plugin:
+        if (!event.isCancelled()) {
+            return getPlayer().performCommand(event.getMessage());
+        }
+        // Cancelled, but it was recognized, so return true
+        return true;
     }
 
     /**

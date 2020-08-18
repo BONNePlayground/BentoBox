@@ -33,8 +33,8 @@ import world.bentobox.bentobox.database.objects.DataObject;
  */
 public class SQLDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
 
-    private static final String COULD_NOT_LOAD_OBJECTS = "Could not load objects ";
-    private static final String COULD_NOT_LOAD_OBJECT = "Could not load object ";
+    protected static final String COULD_NOT_LOAD_OBJECTS = "Could not load objects ";
+    protected static final String COULD_NOT_LOAD_OBJECT = "Could not load object ";
 
     /**
      * Connection to the database
@@ -81,11 +81,19 @@ public class SQLDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
      * Creates the table in the database if it doesn't exist already
      */
     protected void createSchema() {
+        if (sqlConfig.renameRequired()) {
+            // Transition from the old table name
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlConfig.getRenameTableSQL())) {
+                pstmt.execute();
+            } catch (SQLException e) {
+                plugin.logError("Could not rename " + sqlConfig.getOldTableName() + " for data object " + dataObject.getCanonicalName() + " " + e.getMessage());
+            }
+        }
         // Prepare and execute the database statements
         try (PreparedStatement pstmt = connection.prepareStatement(sqlConfig.getSchemaSQL())) {
-            pstmt.executeUpdate();
+            pstmt.execute();
         } catch (SQLException e) {
-            plugin.logError("Problem trying to create schema for data object " + plugin.getSettings().getDatabasePrefix() + dataObject.getCanonicalName() + " " + e.getMessage());
+            plugin.logError("Problem trying to create schema for data object " + dataObject.getCanonicalName() + " " + e.getMessage());
         }
     }
 
@@ -127,8 +135,8 @@ public class SQLDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
     @Override
     public T loadObject(@NonNull String uniqueId) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlConfig.getLoadObjectSQL())) {
-            // UniqueId needs to be placed in quotes
-            preparedStatement.setString(1, "\"" + uniqueId + "\"");
+            // UniqueId needs to be placed in quotes?
+            preparedStatement.setString(1, this.sqlConfig.isUseQuotes() ? "\"" + uniqueId + "\"" : uniqueId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     // If there is a result, we only want/need the first one
@@ -187,8 +195,8 @@ public class SQLDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
 
     private void delete(String uniqueId) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlConfig.getDeleteObjectSQL())) {
-            // UniqueId needs to be placed in quotes
-            preparedStatement.setString(1, "\"" + uniqueId + "\"");
+            // UniqueId needs to be placed in quotes?
+            preparedStatement.setString(1, this.sqlConfig.isUseQuotes() ? "\"" + uniqueId + "\"" : uniqueId);
             preparedStatement.execute();
         } catch (Exception e) {
             plugin.logError("Could not delete object " + plugin.getSettings().getDatabasePrefix() + dataObject.getCanonicalName() + " " + uniqueId + " " + e.getMessage());
@@ -218,8 +226,8 @@ public class SQLDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
     public boolean objectExists(String uniqueId) {
         // Query to see if this key exists
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlConfig.getObjectExistsSQL())) {
-            // UniqueId needs to be placed in quotes
-            preparedStatement.setString(1, "\"" + uniqueId + "\"");
+            // UniqueId needs to be placed in quotes?
+            preparedStatement.setString(1, this.sqlConfig.isUseQuotes() ? "\"" + uniqueId + "\"" : uniqueId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     return resultSet.getBoolean(1);

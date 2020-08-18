@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -76,7 +77,8 @@ public class SettingsTab implements Tab, ClickHandler {
     protected List<Flag> getFlags() {
         // Get a list of flags of the correct type and sort by the translated names
         List<Flag> flags = plugin.getFlagsManager().getFlags().stream().filter(f -> f.getType().equals(type))
-                .sorted(Comparator.comparing(flag -> user.getTranslation(flag.getNameReference())))
+                // We're stripping colors to avoid weird sorting issues
+                .sorted(Comparator.comparing(flag -> ChatColor.stripColor(user.getTranslation(flag.getNameReference()))))
                 .collect(Collectors.toList());
         // Remove any that are not for this game mode
         plugin.getIWM().getAddon(world).ifPresent(gm -> flags.removeIf(f -> !f.getGameModes().isEmpty() && !f.getGameModes().contains(gm)));
@@ -169,6 +171,7 @@ public class SettingsTab implements Tab, ClickHandler {
                     .description(user.getTranslation(PROTECTION_PANEL + "reset-to-default.description"))
                     .clickHandler((panel, user1, clickType, slot) -> {
                         island.setFlagsDefaults();
+                        user.getPlayer().playSound(user.getLocation(), Sound.ENTITY_TNT_PRIMED, 1F, 1F);
                         return true;
                     })
                     .build());

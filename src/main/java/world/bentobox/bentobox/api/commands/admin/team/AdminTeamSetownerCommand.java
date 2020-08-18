@@ -46,22 +46,29 @@ public class AdminTeamSetownerCommand extends CompositeCommand {
             user.sendMessage("general.errors.not-in-team");
             return false;
         }
-        if (getIslands().getOwner(getWorld(), targetUUID).equals(targetUUID)) {
+
+        UUID previousOwnerUUID = getIslands().getOwner(getWorld(), targetUUID);
+        if (targetUUID.equals(previousOwnerUUID)) {
             user.sendMessage("commands.admin.team.setowner.already-owner", TextVariables.NAME, args.get(0));
             return false;
         }
-        // Make new owner
+
+        // Get the User corresponding to the current owner
+        User previousOwner = User.getInstance(previousOwnerUUID);
         User target = User.getInstance(targetUUID);
-        getIslands().setOwner(getWorld(), user, targetUUID);
-        user.sendMessage("commands.admin.team.setowner.success", TextVariables.NAME, args.get(0));
+
         // Fire event so add-ons know
         Island island = getIslands().getIsland(getWorld(), targetUUID);
+        // Call the setowner event
         TeamEvent.builder()
         .island(island)
         .reason(TeamEvent.Reason.SETOWNER)
         .involvedPlayer(targetUUID)
         .admin(true)
         .build();
+
+        // Call the rank change event for the new island owner
+        // We need to call it BEFORE the actual change, in order to retain the player's previous rank.
         IslandEvent.builder()
         .island(island)
         .involvedPlayer(targetUUID)
@@ -69,6 +76,21 @@ public class AdminTeamSetownerCommand extends CompositeCommand {
         .reason(IslandEvent.Reason.RANK_CHANGE)
         .rankChange(island.getRank(target), RanksManager.OWNER_RANK)
         .build();
+
+        // Make new owner
+        getIslands().setOwner(getWorld(), user, targetUUID);
+        user.sendMessage("commands.admin.team.setowner.success", TextVariables.NAME, args.get(0));
+
+        // Call the rank change event for the old island owner
+        // We need to call it AFTER the actual change.
+        IslandEvent.builder()
+        .island(island)
+        .involvedPlayer(previousOwnerUUID)
+        .admin(true)
+        .reason(IslandEvent.Reason.RANK_CHANGE)
+        .rankChange(RanksManager.OWNER_RANK, island.getRank(previousOwner))
+        .build();
+
         return true;
     }
 }

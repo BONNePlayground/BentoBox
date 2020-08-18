@@ -1,6 +1,7 @@
 package world.bentobox.bentobox.api.commands.island;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -51,8 +52,9 @@ public class IslandBanCommand extends CompositeCommand {
         }
         // Check rank to use command
         Island island = getIslands().getIsland(getWorld(), user);
-        if (island.getRank(user) < island.getRankCommand(getUsage())) {
-            user.sendMessage("general.errors.no-permission");
+        int rank = Objects.requireNonNull(island).getRank(user);
+        if (rank < island.getRankCommand(getUsage())) {
+            user.sendMessage("general.errors.insufficient-rank", TextVariables.RANK, user.getTranslation(getPlugin().getRanksManager().getRank(rank)));
             return false;
         }
         // Get target player
@@ -112,7 +114,7 @@ public class IslandBanCommand extends CompositeCommand {
                 target.sendMessage("commands.island.ban.owner-banned-you", TextVariables.NAME, issuer.getName());
                 // If the player is online, has an island and on the banned island, move them home immediately
                 if (target.isOnline() && getIslands().hasIsland(getWorld(), target.getUniqueId()) && island.onIsland(target.getLocation())) {
-                    getIslands().homeTeleport(getWorld(), target.getPlayer());
+                    getIslands().homeTeleportAsync(getWorld(), target.getPlayer());
                     island.getWorld().playSound(target.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1F, 1F);
                 }
                 return true;

@@ -83,7 +83,7 @@ public class PortalTeleportationListener implements Listener {
             else if (plugin.getIslands().hasIsland(overWorld, e.getPlayer().getUniqueId())
                     || plugin.getIslands().inTeam(overWorld, e.getPlayer().getUniqueId())) {
                 e.setCancelled(true);
-                plugin.getIslands().homeTeleport(overWorld, e.getPlayer());
+                plugin.getIslands().homeTeleportAsync(overWorld, e.getPlayer());
             }
             // No island, so just do nothing
             return false;
@@ -175,7 +175,7 @@ public class PortalTeleportationListener implements Listener {
             // From standard nether
             else {
                 e.setCancelled(true);
-                plugin.getIslands().homeTeleport(overWorld, e.getPlayer());
+                plugin.getIslands().homeTeleportAsync(overWorld, e.getPlayer());
             }
             return false;
         }
@@ -240,11 +240,11 @@ public class PortalTeleportationListener implements Listener {
                 if (bp != null) {
                     new BlueprintPaster(plugin, bp,
                             to.getWorld(),
-                            island, () -> new SafeSpotTeleport.Builder(plugin)
-                            .entity(player)
-                            .location(island.getSpawnPoint(env) == null ? to : island.getSpawnPoint(env))
-                            // No need to use portal because there will be no portal on the other end
-                            .build());
+                            island).paste().thenAccept(b -> new SafeSpotTeleport.Builder(plugin)
+                                    .entity(player)
+                                    .location(island.getSpawnPoint(env) == null ? to : island.getSpawnPoint(env))
+                                    // No need to use portal because there will be no portal on the other end
+                                    .build());
                 } else {
                     plugin.logError("Could not paste default island in nether or end. Is there a nether-island or end-island blueprint?");
                 }

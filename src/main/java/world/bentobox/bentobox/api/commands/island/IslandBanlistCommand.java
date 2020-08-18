@@ -2,6 +2,7 @@ package world.bentobox.bentobox.api.commands.island;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import world.bentobox.bentobox.api.commands.CompositeCommand;
@@ -38,8 +39,9 @@ public class IslandBanlistCommand extends CompositeCommand {
         }
         // Check rank to use command
         island = getIslands().getIsland(getWorld(), user.getUniqueId());
-        if (island.getRank(user) < island.getRankCommand("ban")) {
-            user.sendMessage("general.errors.no-permission");
+        int rank = Objects.requireNonNull(island).getRank(user);
+        if (rank < island.getRankCommand(getUsage())) {
+            user.sendMessage("general.errors.insufficient-rank", TextVariables.RANK, user.getTranslation(getPlugin().getRanksManager().getRank(rank)));
             return false;
         }
         return true;
@@ -60,13 +62,11 @@ public class IslandBanlistCommand extends CompositeCommand {
         StringBuilder line = new StringBuilder();
         // Put the names into lines of no more than 40 characters long, separated by commas
         names.forEach(n -> {
-            if (line.length() + n.length() < 41) {
-                line.append(n);
-            } else {
+            if (line.length() + n.length() >= 41) {
                 lines.add(line.toString().trim());
                 line.setLength(0);
-                line.append(n);
             }
+            line.append(n);
             line.append(", ");
         });
         // Remove trailing comma

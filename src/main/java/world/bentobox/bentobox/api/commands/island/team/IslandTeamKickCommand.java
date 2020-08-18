@@ -1,9 +1,8 @@
 package world.bentobox.bentobox.api.commands.island.team;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-
-import org.bukkit.Bukkit;
 
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.commands.ConfirmableCommand;
@@ -13,6 +12,7 @@ import world.bentobox.bentobox.api.localization.TextVariables;
 import world.bentobox.bentobox.api.user.User;
 import world.bentobox.bentobox.database.objects.Island;
 import world.bentobox.bentobox.managers.RanksManager;
+import world.bentobox.bentobox.util.Util;
 
 
 public class IslandTeamKickCommand extends ConfirmableCommand {
@@ -42,8 +42,9 @@ public class IslandTeamKickCommand extends ConfirmableCommand {
         }
         // Check rank to use command
         Island island = getIslands().getIsland(getWorld(), user);
-        if (island.getRank(user) < island.getRankCommand(getUsage())) {
-            user.sendMessage("general.errors.no-permission");
+        int rank = Objects.requireNonNull(island).getRank(user);
+        if (rank < island.getRankCommand(getUsage())) {
+            user.sendMessage("general.errors.insufficient-rank", TextVariables.RANK, user.getTranslation(getPlugin().getRanksManager().getRank(rank)));
             return false;
         }
         // If args are not right, show help
@@ -80,16 +81,7 @@ public class IslandTeamKickCommand extends ConfirmableCommand {
         Island oldIsland = getIslands().getIsland(getWorld(), targetUUID);
         getIslands().removePlayer(getWorld(), targetUUID);
         // Execute commands when leaving
-        getIWM().getOnLeaveCommands(oldIsland.getWorld()).forEach(command -> {
-            command = command.replace("[player]", target.getName());
-            if (command.startsWith("[SUDO]") && target.isOnline()) {
-                // Execute the command by the player
-                target.performCommand(command.substring(6));
-            } else {
-                // Otherwise execute as the server console
-                getPlugin().getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
-            }
-        });
+        Util.runCommands(target, getIWM().getOnLeaveCommands(oldIsland.getWorld()), "leave");
         // Remove money inventory etc.
         if (getIWM().isOnLeaveResetEnderChest(getWorld())) {
             if (target.isOnline()) {
@@ -133,12 +125,12 @@ public class IslandTeamKickCommand extends ConfirmableCommand {
         .involvedPlayer(targetUUID)
         .build();
         IslandEvent.builder()
-                .island(oldIsland)
-                .involvedPlayer(user.getUniqueId())
-                .admin(false)
-                .reason(IslandEvent.Reason.RANK_CHANGE)
-                .rankChange(oldIsland.getRank(user), RanksManager.VISITOR_RANK)
-                .build();
+        .island(oldIsland)
+        .involvedPlayer(user.getUniqueId())
+        .admin(false)
+        .reason(IslandEvent.Reason.RANK_CHANGE)
+        .rankChange(oldIsland.getRank(user), RanksManager.VISITOR_RANK)
+        .build();
 
         // Add cooldown for this player and target
         if (getSettings().getInviteCooldown() > 0 && getParent() != null) {

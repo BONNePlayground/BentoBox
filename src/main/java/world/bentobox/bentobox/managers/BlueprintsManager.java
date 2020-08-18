@@ -12,10 +12,12 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -43,7 +45,6 @@ import world.bentobox.bentobox.blueprints.dataobjects.BlueprintBlock;
 import world.bentobox.bentobox.blueprints.dataobjects.BlueprintBundle;
 import world.bentobox.bentobox.database.json.BentoboxTypeAdapterFactory;
 import world.bentobox.bentobox.database.objects.Island;
-import world.bentobox.bentobox.schems.SchemToBlueprint;
 import world.bentobox.bentobox.util.Util;
 
 /**
@@ -79,7 +80,7 @@ public class BlueprintsManager {
      */
     private final Gson gson;
 
-    private @NonNull BentoBox plugin;
+    private final @NonNull BentoBox plugin;
 
     private @NonNull Set<GameModeAddon> blueprintsLoaded;
 
@@ -185,8 +186,6 @@ public class BlueprintsManager {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             // Load bundles
             blueprintBundles.put(addon, new ArrayList<>());
-            // See if there are any schems that need converting
-            new SchemToBlueprint(plugin).convertSchems(addon);
             if (!loadBundles(addon)) {
                 makeDefaults(addon);
                 loadBundles(addon);
@@ -306,9 +305,7 @@ public class BlueprintsManager {
             String fileName = file.getName().substring(0, file.getName().length() - BLUEPRINT_SUFFIX.length());
             try {
                 Blueprint bp = new BlueprintClipboardManager(plugin, bpf).loadBlueprint(fileName);
-                if (bp.getName() == null) {
-                    bp.setName(fileName);
-                }
+                bp.setName(fileName);
                 blueprints.get(addon).add(bp);
                 plugin.log("Loaded blueprint '" + bp.getName() + FOR + addon.getDescription().getName());
             } catch (Exception e) {
@@ -407,18 +404,22 @@ public class BlueprintsManager {
      */
     public void deleteBlueprint(GameModeAddon addon, String name) {
         List<Blueprint> addonBlueprints = blueprints.get(addon);
-        addonBlueprints.stream().filter(b -> b.getName().equals(name)).forEach(b -> {
-            addonBlueprints.remove(b);
-            blueprints.put(addon, addonBlueprints);
+        Iterator<Blueprint> it = addonBlueprints.iterator();
+        while (it.hasNext()) {
+            Blueprint b = it.next();
+            if (b.getName().equalsIgnoreCase(name)) {
+                it.remove();
+                blueprints.put(addon, addonBlueprints);
 
-            File file = new File(getBlueprintsFolder(addon), name + BLUEPRINT_SUFFIX);
-            // Delete the file
-            try {
-                Files.deleteIfExists(file.toPath());
-            } catch (IOException e) {
-                plugin.logError("Could not delete Blueprint " + e.getLocalizedMessage());
+                File file = new File(getBlueprintsFolder(addon), b.getName() + BLUEPRINT_SUFFIX);
+                // Delete the file
+                try {
+                    Files.deleteIfExists(file.toPath());
+                } catch (IOException e) {
+                    plugin.logError("Could not delete Blueprint " + e.getLocalizedMessage());
+                }
             }
-        });
+        }
     }
 
     /**
@@ -460,32 +461,42 @@ public class BlueprintsManager {
                 plugin.logError("NO DEFAULT BLUEPRINT FOUND! Make sure 'island.blu' exists!");
             }
         }
-        // Paste overworld
+        // Paste
         if (bp != null) {
-            new BlueprintPaster(plugin, bp, addon.getOverWorld(), island, task);
+            new BlueprintPaster(plugin, bp, addon.getOverWorld(), island).paste().thenAccept(b -> {
+                pasteNether(addon, bb, island).thenAccept(b2 ->
+                pasteEnd(addon, bb, island).thenAccept(b3 -> Bukkit.getScheduler().runTask(plugin, task)));
+            });
         }
-        // Make nether island
+        return true;
+
+    }
+
+    private CompletableFuture<Boolean> pasteNether(GameModeAddon addon, BlueprintBundle bb, Island island) {
         if (bb.getBlueprint(World.Environment.NETHER) != null
                 && addon.getWorldSettings().isNetherGenerate()
                 && addon.getWorldSettings().isNetherIslands()
                 && addon.getNetherWorld() != null) {
-            bp = getBlueprints(addon).get(bb.getBlueprint(World.Environment.NETHER));
+            Blueprint bp = getBlueprints(addon).get(bb.getBlueprint(World.Environment.NETHER));
             if (bp != null) {
-                new BlueprintPaster(plugin, bp, addon.getNetherWorld(), island, null);
+                return new BlueprintPaster(plugin, bp, addon.getNetherWorld(), island).paste();
             }
         }
+        return CompletableFuture.completedFuture(false);
+    }
+
+    private CompletableFuture<Boolean> pasteEnd(GameModeAddon addon, BlueprintBundle bb, Island island) {
         // Make end island
         if (bb.getBlueprint(World.Environment.THE_END) != null
                 && addon.getWorldSettings().isEndGenerate()
                 && addon.getWorldSettings().isEndIslands()
                 && addon.getEndWorld() != null) {
-            bp = getBlueprints(addon).get(bb.getBlueprint(World.Environment.THE_END));
+            Blueprint bp = getBlueprints(addon).get(bb.getBlueprint(World.Environment.THE_END));
             if (bp != null) {
-                new BlueprintPaster(plugin, bp, addon.getEndWorld(), island, null);
+                return new BlueprintPaster(plugin, bp, addon.getEndWorld(), island).paste();
             }
         }
-        return true;
-
+        return CompletableFuture.completedFuture(false);
     }
 
     /**

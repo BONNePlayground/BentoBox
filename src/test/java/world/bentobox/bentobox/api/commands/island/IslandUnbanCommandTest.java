@@ -94,6 +94,7 @@ public class IslandUnbanCommandTest {
         when(user.getUniqueId()).thenReturn(uuid);
         when(user.getPlayer()).thenReturn(p);
         when(user.getName()).thenReturn("tastybento");
+        when(user.getTranslation(any())).thenAnswer(invocation -> invocation.getArgument(0, String.class));
 
         // Parent command has no aliases
         when(ic.getSubCommandAliases()).thenReturn(new HashMap<>());
@@ -115,7 +116,7 @@ public class IslandUnbanCommandTest {
         // Island Banned list initialization
         when(island.getBanned()).thenReturn(new HashSet<>());
         when(island.isBanned(any())).thenReturn(false);
-        when(island.getRank(any())).thenReturn(RanksManager.OWNER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.OWNER_RANK);
         when(im.getIsland(any(), any(User.class))).thenReturn(island);
         when(im.getIsland(any(), any(UUID.class))).thenReturn(island);
 
@@ -127,6 +128,11 @@ public class IslandUnbanCommandTest {
         // Server and Plugin Manager for events
         PluginManager pim = mock(PluginManager.class);
         when(Bukkit.getPluginManager()).thenReturn(pim);
+
+        // Ranks Manager
+        RanksManager rm = new RanksManager();
+        when(plugin.getRanksManager()).thenReturn(rm);
+
 
     }
 
@@ -174,10 +180,10 @@ public class IslandUnbanCommandTest {
     public void testTooLowRank() {
         IslandUnbanCommand iubc = new IslandUnbanCommand(ic);
         when(im.hasIsland(any(), eq(uuid))).thenReturn(true);
-        when(island.getRank(any())).thenReturn(RanksManager.MEMBER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.MEMBER_RANK);
         when(island.getRankCommand(anyString())).thenReturn(RanksManager.OWNER_RANK);
         assertFalse(iubc.canExecute(user, iubc.getLabel(), Collections.singletonList("bill")));
-        verify(user).sendMessage("general.errors.no-permission");
+        verify(user).sendMessage(eq("general.errors.insufficient-rank"), eq(TextVariables.RANK), eq("ranks.member"));
     }
 
     /**

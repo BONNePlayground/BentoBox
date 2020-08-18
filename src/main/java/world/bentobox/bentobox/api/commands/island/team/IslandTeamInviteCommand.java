@@ -2,6 +2,7 @@ package world.bentobox.bentobox.api.commands.island.team;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -44,12 +45,13 @@ public class IslandTeamInviteCommand extends CompositeCommand {
         }
         // Check rank to use command
         Island island = getIslands().getIsland(getWorld(), user);
-        if (island.getRank(user) < island.getRankCommand(getUsage())) {
-            user.sendMessage("general.errors.no-permission");
+        int rank = Objects.requireNonNull(island).getRank(user);
+        if (rank < island.getRankCommand(getUsage())) {
+            user.sendMessage("general.errors.insufficient-rank", TextVariables.RANK, user.getTranslation(getPlugin().getRanksManager().getRank(rank)));
             return false;
         }
         UUID playerUUID = user.getUniqueId();
-        if (args.isEmpty() || args.size() > 1) {
+        if (args.size() != 1) {
             // Invite label with no name, i.e., /island invite - tells the player who has invited them so far and why
             if (itc.isInvited(playerUUID)) {
                 Invite invite = itc.getInvite(playerUUID);

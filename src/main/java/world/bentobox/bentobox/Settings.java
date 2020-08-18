@@ -3,6 +3,8 @@ package world.bentobox.bentobox;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bukkit.Material;
+
 import world.bentobox.bentobox.api.configuration.ConfigComment;
 import world.bentobox.bentobox.api.configuration.ConfigEntry;
 import world.bentobox.bentobox.api.configuration.ConfigObject;
@@ -97,19 +99,38 @@ public class Settings implements ConfigObject {
     @ConfigEntry(path = "general.database.use-ssl", since = "1.12.0")
     private boolean useSSL = false;
 
-    @ConfigComment("Database table prefix character. Adds a prefix to the database tables. Not used by flatfile databases.")
+    @ConfigComment("Database table prefix. Adds a prefix to the database tables. Not used by flatfile databases.")
     @ConfigComment("Only the characters A-Z, a-z, 0-9 can be used. Invalid characters will become an underscore.")
     @ConfigComment("Set this to a unique value if you are running multiple BentoBox instances that share a database.")
+    @ConfigComment("Be careful about length - databases usually have a limit of 63 characters for table lengths")
     @ConfigEntry(path = "general.database.prefix-character", since = "1.13.0")
     private String databasePrefix = "";
+
+    @ConfigComment("MongoDB client connection URI to override default connection options.")
+    @ConfigComment("See: https://docs.mongodb.com/manual/reference/connection-string/")
+    @ConfigEntry(path = "general.database.mongodb-connection-uri", since = "1.14.0")
+    private String mongodbConnectionUri = "";
 
     @ConfigComment("Allow FTB Autonomous Activator to work (will allow a pseudo player [CoFH] to place and break blocks and hang items)")
     @ConfigComment("Add other fake player names here if required")
     @ConfigEntry(path = "general.fakeplayers", experimental = true)
     private Set<String> fakePlayers = new HashSet<>();
 
+    /* PANELS */
+
+    @ConfigComment("Toggle whether panels should be closed or not when the player clicks anywhere outside of the inventory view.")
     @ConfigEntry(path = "panel.close-on-click-outside")
     private boolean closePanelOnClickOutside = true;
+
+    @ConfigComment("Defines the Material of the item that fills the gaps (in the header, etc.) of most panels.")
+    @ConfigEntry(path = "panel.filler-material", since = "1.14.0")
+    private Material panelFillerMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+
+    @ConfigComment("Defines how long player skin texture link is stored into local cache before it is requested again.")
+    @ConfigComment("Defined value is in the minutes.")
+    @ConfigComment("Value 0 will not clear cache until server restart.")
+    @ConfigEntry(path = "panel.head-cache-time", since = "1.14.1")
+    private long playerHeadCacheTime = 60;
 
     /*
      * Logs
@@ -233,16 +254,16 @@ public class Settings implements ConfigObject {
     private boolean autoOwnershipTransferIgnoreRanks = false;
 
     // Island deletion related settings
-	@ConfigComment("Toggles whether islands, when players are resetting them, should be kept in the world or deleted.")
-	@ConfigComment("* If set to 'true', whenever a player resets his island, his previous island will become unowned and won't be deleted from the world.")
-	@ConfigComment("  You can, however, still delete those unowned islands through purging.")
-	@ConfigComment("  On bigger servers, this can lead to an increasing world size.")
-	@ConfigComment("  Yet, this allows admins to retrieve a player's old island in case of an improper use of the reset command.")
-	@ConfigComment("  Admins can indeed re-add the player to his old island by registering him to it.")
-	@ConfigComment("* If set to 'false', whenever a player resets his island, his previous island will be deleted from the world.")
-	@ConfigComment("  This is the default behaviour.")
-	@ConfigEntry(path = "island.deletion.keep-previous-island-on-reset", since = "1.13.0")
-	private boolean keepPreviousIslandOnReset = false;
+    @ConfigComment("Toggles whether islands, when players are resetting them, should be kept in the world or deleted.")
+    @ConfigComment("* If set to 'true', whenever a player resets his island, his previous island will become unowned and won't be deleted from the world.")
+    @ConfigComment("  You can, however, still delete those unowned islands through purging.")
+    @ConfigComment("  On bigger servers, this can lead to an increasing world size.")
+    @ConfigComment("  Yet, this allows admins to retrieve a player's old island in case of an improper use of the reset command.")
+    @ConfigComment("  Admins can indeed re-add the player to his old island by registering him to it.")
+    @ConfigComment("* If set to 'false', whenever a player resets his island, his previous island will be deleted from the world.")
+    @ConfigComment("  This is the default behaviour.")
+    @ConfigEntry(path = "island.deletion.keep-previous-island-on-reset", since = "1.13.0")
+    private boolean keepPreviousIslandOnReset = false;
 
     /* WEB */
     @ConfigComment("Toggle whether BentoBox can connect to GitHub to get data about updates and addons.")
@@ -634,7 +655,7 @@ public class Settings implements ConfigObject {
      */
     public String getDatabasePrefix() {
         if (databasePrefix == null) databasePrefix = "";
-        return databasePrefix.isEmpty() ? "" : databasePrefix.replaceAll("[^a-zA-Z0-9]", "_").substring(0,1);
+        return databasePrefix.isEmpty() ? "" : databasePrefix.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     /**
@@ -644,21 +665,82 @@ public class Settings implements ConfigObject {
         this.databasePrefix = databasePrefix;
     }
 
-	/**
-	 * Returns whether islands, when reset, should be kept or deleted.
-	 * @return {@code true} if islands, when reset, should be kept; {@code false} otherwise.
-	 * @since 1.13.0
-	 */
-	public boolean isKeepPreviousIslandOnReset() {
-		return keepPreviousIslandOnReset;
-	}
+    /**
+     * Returns whether islands, when reset, should be kept or deleted.
+     * @return {@code true} if islands, when reset, should be kept; {@code false} otherwise.
+     * @since 1.13.0
+     */
+    public boolean isKeepPreviousIslandOnReset() {
+        return keepPreviousIslandOnReset;
+    }
+
+    /**
+     * Sets whether islands, when reset, should be kept or deleted.
+     * @param keepPreviousIslandOnReset {@code true} if islands, when reset, should be kept; {@code false} otherwise.
+     * @since 1.13.0
+     */
+    public void setKeepPreviousIslandOnReset(boolean keepPreviousIslandOnReset) {
+        this.keepPreviousIslandOnReset = keepPreviousIslandOnReset;
+    }
+
+    /**
+     * Returns a MongoDB client connection URI to override default connection options.
+     *
+     * @return mongodb client connection.
+     * @see <a href="https://docs.mongodb.com/manual/reference/connection-string/">MongoDB Documentation</a>
+     * @since 1.14.0
+     */
+    public String getMongodbConnectionUri() {
+        return mongodbConnectionUri;
+    }
+
+    /**
+     * Set the MongoDB client connection URI.
+     * @param mongodbConnectionUri connection URI.
+     * @since 1.14.0
+     */
+    public void setMongodbConnectionUri(String mongodbConnectionUri) {
+        this.mongodbConnectionUri = mongodbConnectionUri;
+    }
+
+    /**
+     * Returns the Material of the item to preferably use when one needs to fill gaps in Panels.
+     * @return the Material of the item to preferably use when one needs to fill gaps in Panels.
+     * @since 1.14.0
+     */
+    public Material getPanelFillerMaterial() {
+        return panelFillerMaterial;
+    }
+
+    /**
+     * Sets the Material of the item to preferably use when one needs to fill gaps in Panels.
+     * @param panelFillerMaterial the Material of the item to preferably use when one needs to fill gaps in Panels.
+     * @since 1.14.0
+     */
+    public void setPanelFillerMaterial(Material panelFillerMaterial) {
+        this.panelFillerMaterial = panelFillerMaterial;
+    }
+
 
 	/**
-	 * Sets whether islands, when reset, should be kept or deleted.
-	 * @param keepPreviousIslandOnReset {@code true} if islands, when reset, should be kept; {@code false} otherwise.
-	 * @since 1.13.0
-	 */
-	public void setKeepPreviousIslandOnReset(boolean keepPreviousIslandOnReset) {
-		this.keepPreviousIslandOnReset = keepPreviousIslandOnReset;
+     * Method Settings#getPlayerHeadCacheTime returns the playerHeadCacheTime of this object.
+     *
+     * @return the playerHeadCacheTime (type long) of this object.
+     * @since 1.14.1
+     */
+    public long getPlayerHeadCacheTime()
+	{
+		return playerHeadCacheTime;
+	}
+
+
+	/**
+     * Method Settings#setPlayerHeadCacheTime sets new value for the playerHeadCacheTime of this object.
+     * @param playerHeadCacheTime new value for this object.
+     * @since 1.14.1
+     */
+    public void setPlayerHeadCacheTime(long playerHeadCacheTime)
+	{
+		this.playerHeadCacheTime = playerHeadCacheTime;
 	}
 }

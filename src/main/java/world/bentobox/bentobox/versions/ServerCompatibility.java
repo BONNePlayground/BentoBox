@@ -3,6 +3,7 @@ package world.bentobox.bentobox.versions;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.eclipse.jdt.annotation.NonNull;
@@ -74,13 +75,38 @@ public class ServerCompatibility {
         GLOWSTONE(Compatibility.INCOMPATIBLE),
         SPIGOT(Compatibility.COMPATIBLE),
         PAPER(Compatibility.SUPPORTED),
-        TACOSPIGOT(Compatibility.NOT_SUPPORTED),        
-        AKARIN(Compatibility.NOT_SUPPORTED);
+        TACOSPIGOT(Compatibility.NOT_SUPPORTED),
+        AKARIN(Compatibility.NOT_SUPPORTED),
+        /**
+         * @since 1.14.0
+         */
+        UNKNOWN(Compatibility.INCOMPATIBLE);
 
         private Compatibility compatibility;
+        /**
+         * @since 1.14.0
+         */
+        private String name;
 
         ServerSoftware(Compatibility compatibility) {
             this.compatibility = compatibility;
+        }
+
+        /**
+         * @return the name
+         * @since 1.14.0
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * @param name the name to set
+         * @since 1.14.0
+         */
+        public ServerSoftware setName(String name) {
+            this.name = name;
+            return this;
         }
 
         public Compatibility getCompatibility() {
@@ -127,9 +153,12 @@ public class ServerCompatibility {
         /**
          * @since 1.11.0
          */
-        V1_15_2(Compatibility.INCOMPATIBLE)
+        V1_15_2(Compatibility.INCOMPATIBLE),
+        /**
+         * @since 1.14.0
+         */
+        V1_16_1(Compatibility.INCOMPATIBLE)
         ;
-        
 
         private Compatibility compatibility;
 
@@ -181,8 +210,7 @@ public class ServerCompatibility {
             // Now, check the server software
             ServerSoftware software = getServerSoftware();
 
-            if (software == null || software.getCompatibility().equals(Compatibility.INCOMPATIBLE)) {
-                // 'software = null' means that it's not listed. And therefore, it's implicitly incompatible.
+            if (software.getCompatibility().equals(Compatibility.INCOMPATIBLE)) {
                 result = Compatibility.INCOMPATIBLE;
                 return result;
             }
@@ -210,13 +238,13 @@ public class ServerCompatibility {
      * @return the {@link ServerSoftware} run by this server or null.
      * @since 1.3.0
      */
-    @Nullable
+    @NonNull
     public ServerSoftware getServerSoftware() {
         String serverSoftware = Bukkit.getServer().getVersion().substring(4).split("-")[0];
         try {
-            return ServerSoftware.valueOf(serverSoftware.toUpperCase());
+            return ServerSoftware.valueOf(serverSoftware.toUpperCase(Locale.ENGLISH));
         } catch (IllegalArgumentException e) {
-            return null;
+            return ServerSoftware.UNKNOWN.setName(serverSoftware.toUpperCase(Locale.ENGLISH));
         }
     }
 
@@ -229,7 +257,7 @@ public class ServerCompatibility {
     public ServerVersion getServerVersion() {
         String serverVersion = Bukkit.getServer().getBukkitVersion().split("-")[0].replace(".", "_");
         try {
-            return ServerVersion.valueOf("V" + serverVersion.toUpperCase());
+            return ServerVersion.valueOf("V" + serverVersion.toUpperCase(Locale.ENGLISH));
         } catch (IllegalArgumentException e) {
             return null;
         }

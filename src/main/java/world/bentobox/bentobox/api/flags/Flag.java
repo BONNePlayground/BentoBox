@@ -42,7 +42,7 @@ public class Flag implements Comparable<Flag> {
          * It can be modified by the players (island owner).
          * This is usually an on/off setting.
          */
-        SETTING(Material.COMMAND_BLOCK),
+        SETTING(Material.COMPARATOR),
         /**
          * Flag applying to the world.
          * It can only be modified by administrators (permission or operator).
@@ -602,16 +602,15 @@ public class Flag implements Comparable<Flag> {
         public Flag build() {
             // If no clickHandler has been set, then apply default ones
             if (clickHandler == null) {
-                switch (type){
-                case PROTECTION:
-                    clickHandler = new CycleClick(id);
-                    break;
+                switch (type) {
                 case SETTING:
                     clickHandler = new IslandToggleClick(id);
                     break;
                 case WORLD_SETTING:
                     clickHandler = new WorldToggleClick(id);
                     break;
+                case PROTECTION:
+                    // Default option
                 default:
                     clickHandler = new CycleClick(id);
                     break;

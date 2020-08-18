@@ -24,6 +24,7 @@ import world.bentobox.bentobox.util.Util;
  *
  * @author tastybento
  */
+@Table(name = "Players")
 public class Players implements DataObject {
     @Expose
     private Map<Location, Integer> homeLocations = new HashMap<>();
@@ -155,8 +156,7 @@ public class Players implements DataObject {
      * @return the resetsLeft
      */
     public int getResets(World world) {
-        resets.putIfAbsent(world.getName(), 0);
-        return resets.get(world.getName());
+        return resets.computeIfAbsent(world.getName(), k -> 0);
     }
 
     /**

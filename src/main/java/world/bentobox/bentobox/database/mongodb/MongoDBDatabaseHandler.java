@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 
 import com.google.gson.Gson;
 import com.mongodb.MongoClientException;
+import com.mongodb.MongoNamespace;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -22,6 +23,7 @@ import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.database.DatabaseConnector;
 import world.bentobox.bentobox.database.json.AbstractJSONDatabaseHandler;
 import world.bentobox.bentobox.database.objects.DataObject;
+import world.bentobox.bentobox.database.objects.Table;
 
 /**
  *
@@ -59,7 +61,15 @@ public class MongoDBDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
                 plugin.logError("Could not connect to the database. Are the credentials in the config.yml file correct?");
                 connected = false;
             } else {
-                collection = database.getCollection(plugin.getSettings().getDatabasePrefix() + dataObject.getCanonicalName());
+                // Check for old collections
+                String oldName = plugin.getSettings().getDatabasePrefix() + type.getCanonicalName();
+                String newName = getName(plugin, dataObject);
+                if (!oldName.equals((newName)) && collectionExists(database, oldName) && !collectionExists(database, newName)){
+                    collection = database.getCollection(oldName);
+                    collection.renameCollection(new MongoNamespace(database.getName(), newName));
+                } else {
+                    collection = database.getCollection(newName);
+                }
                 IndexOptions indexOptions = new IndexOptions().unique(true);
                 collection.createIndex(Indexes.text(UNIQUEID), indexOptions);
             }
@@ -78,6 +88,23 @@ public class MongoDBDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
             plugin.logWarning("Disabling BentoBox...");
             Bukkit.getPluginManager().disablePlugin(plugin);
         }
+    }
+
+    private boolean collectionExists(MongoDatabase database, final String collectionName) {
+        for (final String name : database.listCollectionNames()) {
+            if (name.equalsIgnoreCase(collectionName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getName(BentoBox plugin, Class<T> type) {
+        return plugin.getSettings().getDatabasePrefix() +
+                (type.getAnnotation(Table.class) == null ?
+                        type.getCanonicalName()
+                        : type.getAnnotation(Table.class)
+                        .name());
     }
 
     @Override
@@ -147,7 +174,7 @@ public class MongoDBDatabaseHandler<T> extends AbstractJSONDatabaseHandler<T> {
         try {
             collection.findOneAndDelete(new Document(MONGO_ID, uniqueId));
         } catch (Exception e) {
-            plugin.logError("Could not delete object " + plugin.getSettings().getDatabasePrefix() + dataObject.getCanonicalName() + " " + uniqueId + " " + e.getMessage());
+            plugin.logError("Could not delete object " + getName(plugin, dataObject) + " " + uniqueId + " " + e.getMessage());
         }
     }
 

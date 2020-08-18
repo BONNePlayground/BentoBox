@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,7 +99,17 @@ public class AddonsManager {
             // try loading the addon
             // Get description in the addon.yml file
             YamlConfiguration data = addonDescription(jar);
-
+            // Check if the addon is already loaded (duplicate version?)
+            String main = data.getString("main");
+            if (main != null) {
+                if (this.getAddonByMainClassName(main).isPresent()) {
+                    getAddonByMainClassName(main).ifPresent(a -> {
+                        plugin.logError("Duplicate addon! Addon " + a.getDescription().getName() + " " + a.getDescription().getVersion() + " has already been loaded!");
+                        plugin.logError("Remove the duplicate and restart!");
+                    });
+                    return;
+                }
+            }
             // Load the addon
             addonClassLoader = new AddonClassLoader(this, data, f, this.getClass().getClassLoader());
 
@@ -144,14 +155,14 @@ public class AddonsManager {
             if (addon instanceof GameModeAddon) {
                 GameModeAddon gameMode = (GameModeAddon) addon;
                 if (!gameMode.getWorldSettings().getWorldName().isEmpty()) {
-                    worldNames.put(gameMode.getWorldSettings().getWorldName().toLowerCase(), gameMode);
+                    worldNames.put(gameMode.getWorldSettings().getWorldName().toLowerCase(Locale.ENGLISH), gameMode);
                 }
             }
             // Addon successfully loaded
             addon.setState(Addon.State.LOADED);
         } catch (NoClassDefFoundError | NoSuchMethodError | NoSuchFieldError e) {
             // Looks like the addon is incompatible, because it tries to refer to missing classes...
-            handleAddonIncompatibility(addon);
+            handleAddonIncompatibility(addon, e);
         } catch (Exception e) {
             // Unhandled exception. We'll give a bit of debug here.
             handleAddonError(addon, e);
@@ -163,8 +174,11 @@ public class AddonsManager {
      */
     public void enableAddons() {
         if (getLoadedAddons().isEmpty()) return;
-        plugin.log("Enabling addons...");
-        getLoadedAddons().forEach(this::enableAddon);
+        plugin.log("Enabling game mode addons...");
+        // Enable GameModes first, then other addons
+        getLoadedAddons().stream().filter(GameModeAddon.class::isInstance).forEach(this::enableAddon);
+        plugin.log("Enabling other addons...");
+        getLoadedAddons().stream().filter(g -> !(g instanceof GameModeAddon)).forEach(this::enableAddon);
         // Set perms for enabled addons
         this.getEnabledAddons().forEach(this::setPerms);
         plugin.log("Addons successfully enabled.");
@@ -194,7 +208,7 @@ public class AddonsManager {
         String desc = perms.getString(perm + ".description");
         // Replace placeholders for Game Mode Addon names
         if (perm.contains(GAMEMODE)) {
-            getGameModeAddons().stream().map(g -> g.getPermissionPrefix())
+            getGameModeAddons().stream().map(Addon::getPermissionPrefix)
             .forEach(p -> DefaultPermissions.registerPermission(perm.replace(GAMEMODE, p), desc, pd));
         } else {
             // Single perm
@@ -207,6 +221,7 @@ public class AddonsManager {
      * @param addon addon
      */
     private void enableAddon(Addon addon) {
+        plugin.log("Enabling " + addon.getDescription().getName() + "...");
         try {
             // If this is a GameModeAddon create the worlds, register it and load the blueprints
             if (addon instanceof GameModeAddon) {
@@ -231,13 +246,9 @@ public class AddonsManager {
             }
             new AddonEvent().builder().addon(addon).reason(AddonEvent.Reason.ENABLE).build();
             addon.setState(Addon.State.ENABLED);
-            plugin.log("Enabling " + addon.getDescription().getName() + "...");
         } catch (NoClassDefFoundError | NoSuchMethodError | NoSuchFieldError e) {
             // Looks like the addon is incompatible, because it tries to refer to missing classes...
-            handleAddonIncompatibility(addon);
-            StringBuilder a = new StringBuilder();
-            addon.getDescription().getAuthors().forEach(author -> a.append(author).append(" "));
-            plugin.getLogger().log(Level.SEVERE, "Please report this stack trace to the addon's author(s): " + a.toString(), e);
+            handleAddonIncompatibility(addon, e);
         } catch (Exception e) {
             // Unhandled exception. We'll give a bit of debug here.
             handleAddonError(addon, e);
@@ -247,14 +258,19 @@ public class AddonsManager {
     /**
      * Handles an addon which failed to load due to an incompatibility (missing class, missing method).
      * @param addon instance of the Addon.
+     * @param e - linkage exception
      * @since 1.1
      */
-    private void handleAddonIncompatibility(@NonNull Addon addon) {
+    private void handleAddonIncompatibility(@NonNull Addon addon, LinkageError e) {
         // Set the AddonState as "INCOMPATIBLE".
         addon.setState(Addon.State.INCOMPATIBLE);
         plugin.logWarning("Skipping " + addon.getDescription().getName() + " as it is incompatible with the current version of BentoBox or of server software...");
         plugin.logWarning("NOTE: The addon is referring to no longer existing classes.");
         plugin.logWarning("NOTE: DO NOT report this as a bug from BentoBox.");
+        StringBuilder a = new StringBuilder();
+        addon.getDescription().getAuthors().forEach(author -> a.append(author).append(" "));
+        plugin.getLogger().log(Level.SEVERE, "Please report this stack trace to the addon's author(s): " + a.toString(), e);
+
     }
 
     private boolean isAddonCompatibleWithBentoBox(@NonNull Addon addon) {
@@ -278,12 +294,17 @@ public class AddonsManager {
                 bentoboxNumber = Integer.parseInt(bentoboxVersion[i]);
             }
             int apiNumber = Util.isInteger(apiVersion[i], false) ? Integer.parseInt(apiVersion[i]) : -1;
-            if (bentoboxNumber < apiNumber) {
-                return false;
+
+            if (bentoboxNumber > apiNumber) {
+                return true; // BentoBox version is greater than the required version -> compatible
             }
+            if (bentoboxNumber < apiNumber) {
+                return false; // BentoBox is definitely outdated
+            }
+            // If it is equal, go to the next number
         }
 
-        return true;
+        return true; // Everything is equal, so return true
     }
 
     /**
@@ -339,6 +360,17 @@ public class AddonsManager {
     @SuppressWarnings("unchecked")
     public <T extends Addon> Optional<T> getAddonByName(@NonNull String name){
         return addons.stream().filter(a -> a.getDescription().getName().equalsIgnoreCase(name)).map(a -> (T) a).findFirst();
+    }
+
+    /**
+     * Gets the addon by main class name
+     * @param name - main class name
+     * @return Optional addon object
+     */
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public <T extends Addon> Optional<T> getAddonByMainClassName(@NonNull String name){
+        return addons.stream().filter(a -> a.getDescription().getMain().equalsIgnoreCase(name)).map(a -> (T) a).findFirst();
     }
 
     @NonNull
@@ -407,7 +439,7 @@ public class AddonsManager {
     public Class<?> getClassByName(@NonNull final String name) {
         try {
             return classes.getOrDefault(name, loaders.values().stream().map(l -> l.findClass(name, false)).filter(Objects::nonNull).findFirst().orElse(null));
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -477,7 +509,7 @@ public class AddonsManager {
     @Nullable
     public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
         // Clean up world name
-        String w = worldName.replace("_nether", "").replace("_the_end", "").toLowerCase();
+        String w = worldName.replace("_nether", "").replace("_the_end", "").toLowerCase(Locale.ENGLISH);
         if (worldNames.containsKey(w)) {
             return worldNames.get(w).getDefaultWorldGenerator(worldName, id);
         }

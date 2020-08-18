@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.ClickType;
 import org.eclipse.jdt.annotation.NonNull;
 
 import world.bentobox.bentobox.BentoBox;
@@ -35,7 +34,7 @@ public class CatalogPanel {
 
         // Setup header and corners
         for (int i : PANES) {
-            builder.item(i, new PanelItemBuilder().icon(Material.LIGHT_BLUE_STAINED_GLASS_PANE).name(" ").build());
+            builder.item(i, new PanelItemBuilder().icon(plugin.getSettings().getPanelFillerMaterial()).name(" ").build());
         }
 
         PanelItemBuilder gamemodesButton = new PanelItemBuilder()
@@ -102,11 +101,7 @@ public class CatalogPanel {
 
                 // Send the link to the releases tab on click
                 itemBuilder.clickHandler((panel, user1, clickType, slot) -> {
-                    if (clickType.equals(ClickType.MIDDLE)) {
-                        CreditsPanel.openPanel(user1, addon.getRepository());
-                    } else {
-                        user1.sendRawMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "https://github.com/" + addon.getRepository() + "/releases");
-                    }
+                    user1.sendRawMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "https://github.com/" + addon.getRepository() + "/releases");
                     return true;
                 });
 

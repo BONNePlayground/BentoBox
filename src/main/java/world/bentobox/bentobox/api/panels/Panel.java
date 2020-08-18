@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -56,7 +57,7 @@ public class Panel implements HeadRequester, InventoryHolder {
     }
 
     protected void makePanel(String name, Map<Integer, PanelItem> items, int size, User user,
-        PanelListener listener) {
+            PanelListener listener) {
         this.makePanel(name, items, size, user, listener, Type.INVENTORY);
     }
 
@@ -70,15 +71,15 @@ public class Panel implements HeadRequester, InventoryHolder {
 
         // Create panel
         switch (type) {
-            case INVENTORY:
-                inventory = Bukkit.createInventory(null, fixSize(size), name);
-                break;
-            case HOPPER:
-                inventory = Bukkit.createInventory(null, InventoryType.HOPPER, name);
-                break;
-            case DROPPER:
-                inventory = Bukkit.createInventory(null, InventoryType.DROPPER, name);
-                break;
+        case INVENTORY:
+            inventory = Bukkit.createInventory(null, fixSize(size), name);
+            break;
+        case HOPPER:
+            inventory = Bukkit.createInventory(null, InventoryType.HOPPER, name);
+            break;
+        case DROPPER:
+            inventory = Bukkit.createInventory(null, InventoryType.DROPPER, name);
+            break;
         }
 
         // Fill the inventory and return
@@ -197,10 +198,8 @@ public class Panel implements HeadRequester, InventoryHolder {
             ItemStack it = inventory.getItem(i);
             if (it != null && it.getType().equals(Material.PLAYER_HEAD)) {
                 ItemMeta meta = it.getItemMeta();
-                if (meta != null && item.getName().equals(meta.getLocalizedName())) {
+                if (meta != null && ChatColor.stripColor(item.getName()).equals(ChatColor.stripColor(meta.getLocalizedName()))) {
                     inventory.setItem(i, item.getItem());
-                    // If one is found, we are done
-                    return;
                 }
             }
         }

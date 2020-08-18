@@ -103,6 +103,7 @@ public class IslandTeamInviteCommandTest {
         // Permission to invite 3 more players
         when(user.getPermissionValue(anyString(), anyInt())).thenReturn(3);
         when(User.getInstance(eq(uuid))).thenReturn(user);
+        when(user.getTranslation(any())).thenAnswer(invocation -> invocation.getArgument(0, String.class));
 
         User.setPlugin(plugin);
         // Target
@@ -125,7 +126,7 @@ public class IslandTeamInviteCommandTest {
         when(im.hasIsland(any(), eq(uuid))).thenReturn(true);
         when(im.isOwner(any(), eq(uuid))).thenReturn(true);
         when(im.getOwner(any(), eq(uuid))).thenReturn(uuid);
-        when(island.getRank(any())).thenReturn(RanksManager.OWNER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.OWNER_RANK);
         when(im.getIsland(any(), eq(user))).thenReturn(island);
         when(plugin.getIslands()).thenReturn(im);
 
@@ -145,7 +146,7 @@ public class IslandTeamInviteCommandTest {
 
         // Locales
         LocalesManager lm = mock(LocalesManager.class);
-        when(lm.get(any(), any())).thenReturn("mock translation");
+        when(lm.get(any(), any())).thenReturn(null);
         when(plugin.getLocalesManager()).thenReturn(lm);
 
         // IWM friendly name
@@ -155,6 +156,10 @@ public class IslandTeamInviteCommandTest {
 
         // Parent command
         when(ic.getTopLabel()).thenReturn("island");
+
+        // Ranks Manager
+        RanksManager rm = new RanksManager();
+        when(plugin.getRanksManager()).thenReturn(rm);
 
         // Command under test
         itl = new IslandTeamInviteCommand(ic);
@@ -188,10 +193,10 @@ public class IslandTeamInviteCommandTest {
      */
     @Test
     public void testCanExecuteLowRank() {
-        when(island.getRank(any())).thenReturn(RanksManager.MEMBER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.MEMBER_RANK);
         when(island.getRankCommand(anyString())).thenReturn(RanksManager.OWNER_RANK);
         assertFalse(itl.canExecute(user, itl.getLabel(), Collections.singletonList("target")));
-        verify(user).sendMessage(eq("general.errors.no-permission"));
+        verify(user).sendMessage(eq("general.errors.insufficient-rank"), eq(TextVariables.RANK), eq("ranks.member"));
     }
 
     /**
@@ -213,7 +218,7 @@ public class IslandTeamInviteCommandTest {
     public void testCanExecuteNoTarget() {
         assertFalse(itl.canExecute(user, itl.getLabel(), Collections.emptyList()));
         // Show help
-        verify(user).sendMessage(eq("commands.help.header"),eq(TextVariables.LABEL),eq(null));
+        verify(user).sendMessage(eq("commands.help.header"),eq(TextVariables.LABEL),eq("commands.help.console"));
     }
 
     /**

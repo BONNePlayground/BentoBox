@@ -3,7 +3,6 @@ package world.bentobox.bentobox.util;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -234,7 +233,10 @@ public class Util {
      */
     @Nullable
     public static World getWorld(@Nullable World world) {
-        return world == null ? null : world.getEnvironment().equals(Environment.NORMAL) ? world : Bukkit.getWorld(world.getName().replace(NETHER, "").replace(THE_END, ""));
+        if (world == null) {
+            return null;
+        }
+        return world.getEnvironment().equals(Environment.NORMAL) ? world : Bukkit.getWorld(world.getName().replace(NETHER, "").replace(THE_END, ""));
     }
 
     /**
@@ -520,7 +522,7 @@ public class Util {
      * @return True for Paper environments
      */
     public static boolean isPaper() {
-        return isJUnitTest() ? false : PaperLib.isPaper();
+        return !isJUnitTest() && PaperLib.isPaper();
     }
 
     /**
@@ -528,8 +530,7 @@ public class Util {
      */
     private static boolean isJUnitTest() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        List<StackTraceElement> list = Arrays.asList(stackTrace);
-        for (StackTraceElement element : list) {
+        for (StackTraceElement element : stackTrace) {
             if (element.getClassName().startsWith("org.junit.")) {
                 return true;
             }
@@ -624,5 +625,29 @@ public class Util {
             // Do nothing
         }
         return null;
+    }
+
+    /**
+     * Run a list of commands for a user
+     * @param user - user affected by the commands
+     * @param commands - a list of commands
+     * @param commandType - the type of command being run - used in the console error message
+     */
+    public static void runCommands(User user, @NonNull List<String> commands, String commandType) {
+        commands.forEach(command -> {
+            command = command.replace("[player]", user.getName());
+            if (command.startsWith("[SUDO]")) {
+                // Execute the command by the player
+                if (!user.isOnline() || !user.performCommand(command.substring(6))) {
+                    plugin.logError("Could not execute " + commandType + " command for " + user.getName() + ": " + command.substring(6));
+                }
+            } else {
+                // Otherwise execute as the server console
+                if (!Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)) {
+                    plugin.logError("Could not execute " + commandType + " command as console: " + command);
+                }
+            }
+        });
+        
     }
 }

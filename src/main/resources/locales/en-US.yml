@@ -19,6 +19,7 @@ general:
   errors:
     command-cancelled: "&c Command cancelled."
     no-permission: "&c You don't have the permission to execute this command (&7 [permission]&c )."
+    insufficient-rank: "&c Your rank is not high enough to do that! (&7 [rank]&c )"
     use-in-game: "&c This command is only available in game."
     no-team: "&c You do not have a team!"
     no-island: "&c You do not have an island!"
@@ -590,7 +591,7 @@ commands:
           name-joined-your-island: "&a [name] joined your island!"
           confirmation: |-
             &c Are you sure you want to accept this invite?
-            &c&l You will &n LOSE&r&c&l your current island!
+            &c&l You will &n LOSE &r&c&l your current island!
         reject:
           description: "reject an invitation"
           you-rejected-invite: "&a You rejected the invitation to join an island."
@@ -656,6 +657,9 @@ commands:
       description: "display island settings"
     language:
       description: "select language"
+      parameters: "[language]"
+      not-available: "&c This language is not available."
+      already-selected: "&c You are already using this language."
     expel:
       description: "expel a player from your island"
       parameters: "<player>"
@@ -680,9 +684,12 @@ ranks:
 protection:
   command-is-banned: "Command is banned for visitors"
   flags:
-    ANIMAL_SPAWN: 
-      description: "Toggle natural spawning"
-      name: "Animal spawning"
+    ANIMAL_NATURAL_SPAWN:
+      description: "Toggle natural animal spawning"
+      name: "Animal natural spawn"
+    ANIMAL_SPAWNERS_SPAWN:
+      description: "Toggle animal spawning with spawners"
+      name: "Animal spawners"
     ANVIL: 
       description: "Toggle interaction"
       name: "Anvils"
@@ -701,7 +708,9 @@ protection:
       hint: "Bed use disabled"
     BOAT:
       name: "Boats"
-      description: "Toggle boats interactions"
+      description: |-
+        Toggle placing, breaking and
+        entering into boats.
       hint: "No boat interaction allowed"
     BREAK_BLOCKS: 
       description: "Toggle breaking"
@@ -710,9 +719,15 @@ protection:
     BREAK_SPAWNERS:
       description: |-
         Toggle spawners breaking.
-        Override the Break Blocks flag.
+        Overrides the Break Blocks flag.
       name: "Break spawners"
       hint: "Spawner breaking disabled"
+    BREAK_HOPPERS:
+      description: |-
+        Toggle hoppers breaking.
+        Overrides the Break Blocks flag.
+      name: "Break hoppers"
+      hint: "Hoppers breaking disabled"
     BREEDING: 
       description: "Toggle breeding"
       name: "Breed animals"
@@ -799,11 +814,16 @@ protection:
       name: "Workbenches"
       hint: "Workbench access disabled"
     CREEPER_DAMAGE:
-      description: "Toggle creeper damage"
-      name: "Creeper damage"
+      description: |
+        &a Toggle creeper
+        &a damage protection
+      name: "Creeper damage protection"
     CREEPER_GRIEFING:
-      description: "Toggle creeper griefing when ignited by island visitor"
-      name: "Creeper griefing"
+      description: |
+        &a Toggle creeper griefing
+        &a protection when ignited
+        &a by island visitor.
+      name: "Creeper griefing protection"
       hint: "Creeper griefing disabled"
     CROP_TRAMPLE: 
       description: "Toggle crop trampling"
@@ -1003,11 +1023,16 @@ protection:
       hint: "Milking cows disabled"
     MINECART:
       name: "Minecarts"
-      description: "Toggle minecart interactions"
+      description: |-
+        Toggle placing, breaking and
+        entering into minecarts.
       hint: "Minecart interaction disabled"
-    MONSTER_SPAWN: 
-      description: "Toggle natural spawning"
-      name: "Monster spawning"
+    MONSTER_NATURAL_SPAWN:
+      description: "Toggle natural monster spawning"
+      name: "Monster natural spawn"
+    MONSTER_SPAWNERS_SPAWN:
+      description: "Toggle monster spawning with spawners"
+      name: "Monster spawners"
     MOUNT_INVENTORY: 
       description: |-
         &a Toggle access
@@ -1219,7 +1244,7 @@ protection:
       expert:
         name: "&c Expert Settings"
         description: "&a Displays all the available settings."
-      click-to-switch: "&e Click &a to switch to the &r [next]&r &a ."
+      click-to-switch: "&e Click &7 to switch to the &r [next]&r &7 ."
     reset-to-default:
       name: "&c Reset to default"
       description: |+
@@ -1248,15 +1273,23 @@ protection:
       description-layout: |
         &a [description]
 
+        &e Left Click &7 to cycle downwards.
+        &e Right Click &7 to cycle upwards.
+
         &7 Allowed for:
       allowed-rank: "&3 - &a "
       blocked-rank: "&3 - &c "
       minimal-rank: "&3 - &2 "
-      menu-layout: "&a [description]"
+      menu-layout: |
+        &a [description]
+
+        &e Click &7 to open.
       setting-cooldown: "&c Setting is on cooldown"
       setting-layout: |
         &a [description]
-        
+
+        &e Click &7 to toggle.
+
         &7 Current setting: [setting]
       setting-active: "&a Active"
       setting-disabled: "&c Disabled"

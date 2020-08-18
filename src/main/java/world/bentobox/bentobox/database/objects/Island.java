@@ -53,6 +53,7 @@ import world.bentobox.bentobox.util.Util;
  * @author tastybento
  * @author Poslovitch
  */
+@Table(name = "Islands")
 public class Island implements DataObject {
 
     // True if this island is deleted and pending deletion from the database
@@ -300,8 +301,7 @@ public class Island implements DataObject {
      * @return flag value
      */
     public int getFlag(@NonNull Flag flag) {
-        flags.putIfAbsent(flag, flag.getDefaultRank());
-        return flags.get(flag);
+        return flags.computeIfAbsent(flag, k -> flag.getDefaultRank());
     }
 
     /**
@@ -522,6 +522,16 @@ public class Island implements DataObject {
      */
     public int getRank(User user) {
         return members.getOrDefault(user.getUniqueId(), RanksManager.VISITOR_RANK);
+    }
+
+    /**
+     * Get the rank of user for this island
+     * @param userUUID - the User's UUID
+     * @return rank integer
+     * @since 1.14.0
+     */
+    public int getRank(UUID userUUID) {
+        return members.getOrDefault(userUUID, RanksManager.VISITOR_RANK);
     }
 
     @Override

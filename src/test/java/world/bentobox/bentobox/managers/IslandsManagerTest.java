@@ -258,7 +258,7 @@ public class IslandsManagerTest {
         whitelist.add(EntityType.ENDERMAN);
         whitelist.add(EntityType.WITHER);
         whitelist.add(EntityType.ZOMBIE_VILLAGER);
-        whitelist.add(EntityType.PIG_ZOMBIE);
+
         when(iwm.getRemoveMobsWhitelist(any())).thenReturn(whitelist);
 
 
@@ -724,6 +724,7 @@ public class IslandsManagerTest {
     /**
      * Test method for {@link world.bentobox.bentobox.managers.IslandsManager#homeTeleport(World, Player, int)}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testHomeTeleportPlayerInt() {
         when(iwm.getDefaultGameMode(world)).thenReturn(GameMode.SURVIVAL);

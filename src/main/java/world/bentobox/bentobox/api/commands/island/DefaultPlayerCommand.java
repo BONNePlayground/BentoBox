@@ -27,8 +27,8 @@ public abstract class DefaultPlayerCommand extends CompositeCommand
     {
         // Register command with alias from config.
         super(addon,
-            addon.getWorldSettings().getPlayerCommandAliases().split(" ")[0],
-            addon.getWorldSettings().getPlayerCommandAliases().split(" "));
+                addon.getWorldSettings().getPlayerCommandAliases().split(" ")[0],
+                addon.getWorldSettings().getPlayerCommandAliases().split(" "));
     }
 
 
@@ -84,7 +84,7 @@ public abstract class DefaultPlayerCommand extends CompositeCommand
 
     /**
      * Defines what will be executed when this command is run.
-     * @see world.bentobox.bentobox.api.commands.BentoBoxCommand#execute(User, String, List<String>)
+     * @see world.bentobox.bentobox.api.commands.BentoBoxCommand#execute(User, String, List&lt;String&gt;)
      */
     @Override
     public boolean execute(User user, String label, List<String> args)
@@ -106,17 +106,16 @@ public abstract class DefaultPlayerCommand extends CompositeCommand
             // Default command if user has an island.
             String command = this.<GameModeAddon>getAddon().getWorldSettings().getDefaultPlayerAction();
 
-            // If command exists, the call it.
-            // Otherwise, just use "go" command.
-            if (command != null && this.getSubCommand(command).isPresent())
+            // Perform command or use "go" command.
+            if (command != null && user.performCommand(label + " " + command))
             {
-                return this.getSubCommand(command).get().call(user, label, Collections.emptyList());
+                return true;
             }
             else
             {
                 return this.getSubCommand("go").
-                    map(goCmd -> goCmd.call(user, goCmd.getLabel(), Collections.emptyList())).
-                    orElse(false);
+                        map(goCmd -> goCmd.call(user, goCmd.getLabel(), Collections.emptyList())).
+                        orElse(false);
             }
         }
         else
@@ -124,17 +123,16 @@ public abstract class DefaultPlayerCommand extends CompositeCommand
             // Default command if user does not have an island.
             String command = this.<GameModeAddon>getAddon().getWorldSettings().getDefaultNewPlayerAction();
 
-            // If command exists, the call it.
-            // Otherwise, just use "create" command.
-            if (command != null && this.getSubCommand(command).isPresent())
+            // Perform command or use "create" command.
+            if (command != null && user.performCommand(label + " " + command))
             {
-                return this.getSubCommand(command).get().call(user, label, Collections.emptyList());
+                return true;
             }
             else
             {
                 return this.getSubCommand("create").
-                    map(createCmd -> createCmd.call(user, createCmd.getLabel(), Collections.emptyList())).
-                    orElse(false);
+                        map(createCmd -> createCmd.call(user, createCmd.getLabel(), Collections.emptyList())).
+                        orElse(false);
             }
         }
     }

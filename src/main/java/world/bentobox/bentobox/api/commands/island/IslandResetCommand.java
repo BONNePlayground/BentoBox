@@ -3,10 +3,8 @@ package world.bentobox.bentobox.api.commands.island;
 import java.io.IOException;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.eclipse.jdt.annotation.NonNull;
 
-import world.bentobox.bentobox.api.addons.GameModeAddon;
 import world.bentobox.bentobox.api.commands.CompositeCommand;
 import world.bentobox.bentobox.api.commands.ConfirmableCommand;
 import world.bentobox.bentobox.api.events.island.IslandEvent;
@@ -19,6 +17,7 @@ import world.bentobox.bentobox.managers.BlueprintsManager;
 import world.bentobox.bentobox.managers.island.NewIsland;
 import world.bentobox.bentobox.managers.island.NewIsland.Builder;
 import world.bentobox.bentobox.panels.IslandCreationPanel;
+import world.bentobox.bentobox.util.Util;
 
 /**
  * @author tastybento
@@ -80,7 +79,7 @@ public class IslandResetCommand extends ConfirmableCommand {
     public boolean execute(User user, String label, List<String> args) {
         // Permission check if the name is not the default one
         if (!args.isEmpty()) {
-            String name = getPlugin().getBlueprintsManager().validate((GameModeAddon)getAddon(), args.get(0).toLowerCase(java.util.Locale.ENGLISH));
+            String name = getPlugin().getBlueprintsManager().validate(getAddon(), args.get(0).toLowerCase(java.util.Locale.ENGLISH));
             if (name == null || name.isEmpty()) {
                 // The blueprint name is not valid.
                 user.sendMessage("commands.island.create.unknown-blueprint");
@@ -107,7 +106,7 @@ public class IslandResetCommand extends ConfirmableCommand {
      */
     private void selectBundle(@NonNull User user, @NonNull String label) {
         // Show panel only if there are multiple bundles available
-        if (getPlugin().getBlueprintsManager().getBlueprintBundles((GameModeAddon)getAddon()).size() > 1) {
+        if (getPlugin().getBlueprintsManager().getBlueprintBundles(getAddon()).size() > 1) {
             // Show panel - once the player selected a bundle, this will re-run this command
             IslandCreationPanel.openPanel(this, user, label);
         } else {
@@ -180,20 +179,7 @@ public class IslandResetCommand extends ConfirmableCommand {
             getIslands().removePlayer(getWorld(), memberUUID);
 
             // Execute commands when leaving
-            getIWM().getOnLeaveCommands(island.getWorld()).forEach(command -> {
-                command = command.replace("[player]", member.getName());
-                if (command.startsWith("[SUDO]") && member.isOnline()) {
-                    // Execute the command by the player
-                    if (!member.performCommand(command.substring(6))) {
-                        getPlugin().logError("Could not execute leave command for " + member.getName() + ": " + command.substring(6));
-                    }
-                } else {
-                    // Otherwise execute as the server console
-                    if (!getPlugin().getServer().dispatchCommand(Bukkit.getConsoleSender(), command)) {
-                        getPlugin().logError("Could not execute leave command as console: " + command);
-                    }
-                }
-            });
+            Util.runCommands(member, getIWM().getOnLeaveCommands(island.getWorld()), "leave");
 
             // Remove money inventory etc.
             if (getIWM().isOnLeaveResetEnderChest(getWorld())) {

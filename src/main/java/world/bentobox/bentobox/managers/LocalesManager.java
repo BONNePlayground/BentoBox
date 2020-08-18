@@ -20,9 +20,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.addons.Addon;
 import world.bentobox.bentobox.api.localization.BentoBoxLocale;
@@ -175,8 +175,10 @@ public class LocalesManager {
             jarLocale.getKeys(true).stream().filter(k -> !fileLocale.contains(k, false)).forEach(k -> fileLocale.set(k, jarLocale.get(k)));
             // Save file
             fileLocale.save(fileLocaleFile);
+        } catch (InvalidConfigurationException e) {
+            plugin.logError("Could not update locale file '" + lf + "' due to it being malformed: " + e.getMessage());
         } catch (Exception e) {
-            plugin.logError("Error updating locale file: " + lf + " : " + e.getMessage());
+            plugin.logError("Error updating locale file '" + lf + "': " + e.getMessage());
             plugin.logStacktrace(e);
         }
     }
@@ -199,7 +201,7 @@ public class LocalesManager {
                 // We cannot use Bukkit's saveResource, because we want it to go into a specific folder, so...
                 // Get the last part of the name
                 int lastIndex = name.lastIndexOf('/');
-                File targetFile = new File(localeDir, name.substring(lastIndex >= 0 ? lastIndex : 0));
+                File targetFile = new File(localeDir, name.substring(Math.max(lastIndex, 0)));
                 copyFile(name, targetFile);
                 // Update the locale file if it exists already
                 try (InputStreamReader in = new InputStreamReader(plugin.getResource(name))) {
@@ -292,6 +294,16 @@ public class LocalesManager {
         } else {
             return new ArrayList<>(languages.keySet());
         }
+    }
+
+    /**
+     * Returns {@code true} if this locale is available, {@code false} otherwise.
+     * @param locale the locale, not null. Consider using {@link Locale#forLanguageTag(String)} if needed.
+     * @return {@code true} if this locale is available, {@code false} otherwise.
+     * @since 1.14.0
+     */
+    public boolean isLocaleAvailable(@NonNull Locale locale) {
+        return languages.containsKey(locale);
     }
 
     /**

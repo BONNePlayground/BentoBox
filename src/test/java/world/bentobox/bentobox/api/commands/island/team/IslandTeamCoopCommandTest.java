@@ -96,6 +96,7 @@ public class IslandTeamCoopCommandTest {
         when(user.getUniqueId()).thenReturn(uuid);
         when(user.getPlayer()).thenReturn(p);
         when(user.getName()).thenReturn("tastybento");
+        when(user.getTranslation(any())).thenAnswer(invocation -> invocation.getArgument(0, String.class));
         User.setPlugin(plugin);
 
         // Parent command has no aliases
@@ -107,7 +108,7 @@ public class IslandTeamCoopCommandTest {
         when(im.isOwner(any(), any())).thenReturn(true);
         when(im.getOwner(any(), any())).thenReturn(uuid);
         // Island
-        when(island.getRank(any())).thenReturn(RanksManager.OWNER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.OWNER_RANK);
         when(island.getMemberSet(anyInt(), any(Boolean.class))).thenReturn(ImmutableSet.of(uuid));
         when(im.getIsland(any(), Mockito.any(User.class))).thenReturn(island);
         when(im.getIsland(any(), Mockito.any(UUID.class))).thenReturn(island);
@@ -139,6 +140,11 @@ public class IslandTeamCoopCommandTest {
         when(phm.replacePlaceholders(any(), any())).thenAnswer(invocation -> invocation.getArgument(1, String.class));
         // Placeholder manager
         when(plugin.getPlaceholdersManager()).thenReturn(phm);
+
+        // Ranks Manager
+        RanksManager rm = new RanksManager();
+        when(plugin.getRanksManager()).thenReturn(rm);
+
     }
 
     @After
@@ -163,11 +169,11 @@ public class IslandTeamCoopCommandTest {
      */
     @Test
     public void testCanExecuteLowRank() {
-        when(island.getRank(any())).thenReturn(RanksManager.MEMBER_RANK);
+        when(island.getRank(any(User.class))).thenReturn(RanksManager.MEMBER_RANK);
         when(island.getRankCommand(anyString())).thenReturn(RanksManager.OWNER_RANK);
         IslandTeamCoopCommand itl = new IslandTeamCoopCommand(ic);
         assertFalse(itl.canExecute(user, itl.getLabel(), Collections.singletonList("bill")));
-        verify(user).sendMessage(eq("general.errors.no-permission"));
+        verify(user).sendMessage(eq("general.errors.insufficient-rank"), eq(TextVariables.RANK), eq("ranks.member"));
     }
 
     /**
