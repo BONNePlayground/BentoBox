@@ -119,7 +119,7 @@ public class BlockInteractionListenerTest {
         when(Tag.ANVIL.isTagged(Material.DAMAGED_ANVIL)).thenReturn(true);
         clickedBlocks.put(Material.BEACON, Flags.BEACON);
         clickedBlocks.put(Material.WHITE_BED, Flags.BED);
-        when(Tag.BEDS.isTagged(Material.WHITE_BED)).thenReturn(true);
+//        when(Tag.BEDS.isTagged(Material.WHITE_BED)).thenReturn(true);
         clickedBlocks.put(Material.BREWING_STAND, Flags.BREWING);
         clickedBlocks.put(Material.CAULDRON, Flags.BREWING);
 //        clickedBlocks.put(Material.BARREL, Flags.CONTAINER);
@@ -127,7 +127,7 @@ public class BlockInteractionListenerTest {
         clickedBlocks.put(Material.CHEST_MINECART, Flags.CONTAINER);
         clickedBlocks.put(Material.TRAPPED_CHEST, Flags.CONTAINER);
         clickedBlocks.put(Material.SHULKER_BOX, Flags.CONTAINER);
-        when(Tag.SHULKER_BOXES.isTagged(Material.SHULKER_BOX)).thenReturn(true);
+//        when(Tag.SHULKER_BOXES.isTagged(Material.SHULKER_BOX)).thenReturn(true);
         clickedBlocks.put(Material.FLOWER_POT, Flags.CONTAINER);
 //        clickedBlocks.put(Material.COMPOSTER, Flags.CONTAINER);
         clickedBlocks.put(Material.DISPENSER, Flags.DISPENSER);

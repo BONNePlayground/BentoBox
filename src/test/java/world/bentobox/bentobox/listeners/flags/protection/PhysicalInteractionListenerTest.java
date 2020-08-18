@@ -197,7 +197,7 @@ public class PhysicalInteractionListenerTest {
         when(Util.stripSpaceAfterColorCodes(anyString())).thenCallRealMethod();
 
         // Tags
-        when(Tag.PRESSURE_PLATES.isTagged(any(Material.class))).thenReturn(true);
+//        when(Tag.PRESSURE_PLATES.isTagged(any(Material.class))).thenReturn(true);
         when(Tag.WOODEN_BUTTONS.isTagged(any(Material.class))).thenReturn(true);
     }
 
@@ -224,7 +224,7 @@ public class PhysicalInteractionListenerTest {
     @Test
     public void testOnPlayerInteractWrongMaterial() {
         when(clickedBlock.getType()).thenReturn(Material.STONE);
-        when(Tag.PRESSURE_PLATES.isTagged(clickedBlock.getType())).thenReturn(false);
+//        when(Tag.PRESSURE_PLATES.isTagged(clickedBlock.getType())).thenReturn(false);
         PlayerInteractEvent e  = new PlayerInteractEvent(player, Action.PHYSICAL, item, clickedBlock, BlockFace.UP);
         new PhysicalInteractionListener().onPlayerInteract(e);
         assertEquals(Result.ALLOW, e.useInteractedBlock());

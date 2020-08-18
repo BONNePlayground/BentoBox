@@ -73,17 +73,17 @@ public class PhysicalInteractionListener extends FlagListener {
     private boolean isPressurePlate(Material material) {
         switch(material) {
             case STONE_PRESSURE_PLATE:
-            case POLISHED_BLACKSTONE_PRESSURE_PLATE:
+//            case POLISHED_BLACKSTONE_PRESSURE_PLATE:
             case ACACIA_PRESSURE_PLATE:
             case BIRCH_PRESSURE_PLATE:
-            case CRIMSON_PRESSURE_PLATE:
+//            case CRIMSON_PRESSURE_PLATE:
             case DARK_OAK_PRESSURE_PLATE:
             case HEAVY_WEIGHTED_PRESSURE_PLATE:
             case JUNGLE_PRESSURE_PLATE:
             case LIGHT_WEIGHTED_PRESSURE_PLATE:
             case OAK_PRESSURE_PLATE:
             case SPRUCE_PRESSURE_PLATE:
-            case WARPED_PRESSURE_PLATE:
+//            case WARPED_PRESSURE_PLATE:
                 return true;
             default:
                 return false;
